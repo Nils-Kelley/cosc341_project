@@ -1,0 +1,22 @@
+{
+  "name": "app",
+  "version": "1.0.0",
+  "description": "For COSC 341 - Project Step 4",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "latest",
+    "mysql2": "latest",
+    "dotenv": "latest",
+    "body-parser": "latest",
+    "cors": "latest",
+    "bcrypt": "latest",
+    "jsonwebtoken": "latest",
+    "express-session": "latest",
+    "multer": "latest",
+    "sharp": "latest",
+    "express-rate-limit": "latest"
+  }
+}

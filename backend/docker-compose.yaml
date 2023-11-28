@@ -1,0 +1,35 @@
+version: '3'
+services:
+  mysql-db:
+    image: mysql:latest
+    ports:
+      - '3306:3306'
+    environment:
+      - MYSQL_DATABASE=sql-341
+      - MYSQL_USER=webuser
+      - MYSQL_PASSWORD=P@ssw0rd
+      - MYSQL_ROOT_PASSWORD=rootpassword
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./proj.sql:/docker-entrypoint-initdb.d/proj.sql
+
+  node-app:
+    build:
+      context: .
+      dockerfile: df.Dockerfile
+    ports:
+      - '8081:8081'
+    depends_on:
+      - mysql-db
+    environment:
+      - DB_HOST=localhost
+      - DB_PORT=3306
+      - DB_USER=webuser
+      - DB_PASSWORD=P@ssw0rd
+      - DB_NAME=proj
+      - UPLOADS_DIR=/uploads
+    volumes:
+      - ./uploads:/uploads
+
+volumes:
+  mysql-data:
