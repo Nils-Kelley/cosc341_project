@@ -13,15 +13,15 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'RateIt', // Set the app title to "RateIt"
+      title: 'RateIt',
       theme: ThemeData(
-        primaryColor: Colors.blue, // Set the primary color to blue
-        scaffoldBackgroundColor: Colors.white, // Set the background color to white
+        primaryColor: Colors.blue,
+        scaffoldBackgroundColor: Colors.white,
         appBarTheme: AppBarTheme(
-          backgroundColor: Colors.blue, // Set the app bar background color to blue
-          centerTitle: true, // Center-align the title
+          backgroundColor: Colors.blue,
+          centerTitle: true,
         ),
-        colorScheme: ColorScheme.fromSwatch(primarySwatch: Colors.blue), // Use blue as the primary color
+        colorScheme: ColorScheme.fromSwatch(primarySwatch: Colors.blue),
         useMaterial3: true,
       ),
       home: const MyHomePage(),
@@ -43,10 +43,6 @@ class _MyHomePageState extends State<MyHomePage> {
     HomeScreen(),
     ForYouPage(),
     ProfileScreen(),
-
-
-  // Add the "For You" page here
-    // Add other screens here as needed
   ];
 
   void _onItemTapped(int index) {
@@ -59,56 +55,28 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.blue, // Set the app bar background color to blue
-        title: Row(
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(left: 16.0), // Add left padding to "RateIt"
-              child: Text(
-                'RateIt', // Set the app title to "RateIt"
-                style: TextStyle(
-                  color: Colors.white, // Set title text color to white
-                  fontSize: 20,
-                ),
-              ),
-            ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0), // Add horizontal padding to search bar
-                child: Container(
-                  height: 40, // Set the search bar's height
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20), // Make the search bar rounded
-                  ),
-                  child: Center(
-                    child: Row(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.only(left: 8.0),
-                          child: Icon(
-                            Icons.search,
-                            color: Colors.grey, // Set the search icon color
-                          ),
-                        ),
-                        Expanded(
-                          child: TextField(
-                            style: TextStyle(color: Colors.black), // Set text color to black
-                            decoration: InputDecoration(
-                              hintText: 'Search...',
-                              hintStyle: TextStyle(color: Colors.grey), // Set hint text color
-                              border: InputBorder.none, // Remove border
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
+        backgroundColor: Colors.blue,
+        title: Text(
+          'RateIt',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+          ),
         ),
+        leading: IconButton(
+          icon: Icon(
+            Icons.search,
+            color: Colors.white,
+          ),
+          onPressed: () {
+            // Implement search functionality here
+          },
+        ),
+        actions: [
+          _buildNotificationIcon(),
+          _buildSettingsIcon(),
+        ],
       ),
       body: Center(
         child: _widgetOptions.elementAt(_selectedIndex),
@@ -119,7 +87,7 @@ class _MyHomePageState extends State<MyHomePage> {
             icon: Icon(Icons.home),
             label: 'Home',
           ),
-          BottomNavigationBarItem( // Add the "For You" page entry
+          BottomNavigationBarItem(
             icon: Icon(Icons.star),
             label: 'For You',
           ),
@@ -127,15 +95,42 @@ class _MyHomePageState extends State<MyHomePage> {
             icon: Icon(Icons.person),
             label: 'Profile',
           ),
-
-          // Add other navigation bar items here as needed
         ],
         currentIndex: _selectedIndex,
-        selectedItemColor: Colors.blue, // Set the selected item color to blue
+        selectedItemColor: Colors.blue,
         onTap: _onItemTapped,
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          // Implement a floating action button functionality (e.g., add a review)
+        },
+        backgroundColor: Colors.blue,
+        child: Icon(Icons.add),
       ),
     );
   }
+
+  Widget _buildNotificationIcon() {
+    return IconButton(
+      icon: Icon(
+        Icons.notifications,
+        color: Colors.white,
+      ),
+      onPressed: () {
+        // Implement notification functionality here
+      },
+    );
+  }
+
+  Widget _buildSettingsIcon() {
+    return IconButton(
+      icon: Icon(
+        Icons.settings,
+        color: Colors.white,
+      ),
+      onPressed: () {
+        // Implement settings functionality here
+      },
+    );
+  }
 }
-
-
