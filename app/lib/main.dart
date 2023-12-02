@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'profile_screen.dart';
 import 'home_screen.dart';
 import 'for_you.dart';
+import 'review_dialog.dart'; // Import the review dialog widget
 
 void main() {
   runApp(const MyApp());
@@ -49,6 +50,15 @@ class _MyHomePageState extends State<MyHomePage> {
     setState(() {
       _selectedIndex = index;
     });
+  }
+
+  Future<void> _showReviewDialog(BuildContext context) async {
+    await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return ReviewDialog(); // Use the ReviewDialog widget here
+      },
+    );
   }
 
   @override
@@ -102,7 +112,7 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // Implement a floating action button functionality (e.g., add a review)
+          _showReviewDialog(context); // Show the review dialog
         },
         backgroundColor: Colors.blue,
         child: Icon(Icons.add),
