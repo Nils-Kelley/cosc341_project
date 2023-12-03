@@ -1,6 +1,13 @@
+import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:http/io_client.dart';
+import 'main.dart';
 
 class LoginScreen extends StatelessWidget {
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -27,6 +34,7 @@ class LoginScreen extends StatelessWidget {
                 labelText: 'Email',
                 hintText: 'Enter your email',
                 icon: Icons.email,
+                controller: _emailController,
               ),
               SizedBox(height: 15),
               _buildTextField(
@@ -34,12 +42,11 @@ class LoginScreen extends StatelessWidget {
                 hintText: 'Enter your password',
                 icon: Icons.lock,
                 obscureText: true,
+                controller: _passwordController,
               ),
               SizedBox(height: 20),
               ElevatedButton(
-                onPressed: () {
-                  // Implement your login logic here
-                },
+                onPressed: () => _login(context),
                 style: ElevatedButton.styleFrom(
                   primary: Colors.blue,
                   padding: EdgeInsets.all(15),
@@ -99,13 +106,56 @@ class LoginScreen extends StatelessWidget {
     );
   }
 
+  Future<void> _login(BuildContext context) async {
+    final String email = _emailController.text;
+    final String password = _passwordController.text;
+
+    final client = HttpClient()
+      ..badCertificateCallback = (X509Certificate cert, String host, int port) => true; // Bypass handshake error
+
+    try {
+      final request = await client.postUrl(Uri.parse('https://10.0.0.201:5050/login'));
+      request.headers.set(HttpHeaders.contentTypeHeader, 'application/json; charset=UTF-8');
+      request.write(jsonEncode({
+        'identifier': email,
+        'password': password,
+      }));
+
+      final response = await request.close();
+      final responseBody = await response.transform(utf8.decoder).join();
+
+      print('Response Status Code: ${response.statusCode}');
+      print('Response Body: $responseBody'); // Debugging line
+
+      if (response.statusCode == 200) {
+        // Navigate to HomePage upon successful login
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => MyHomePage()), // Replace HomePage with the actual home page widget
+        );
+      } else {
+        print('Failed to login');
+        // Handle login failure, show an alert dialog or a snackbar
+      }
+    } catch (e) {
+      print('An error occurred: $e');
+      // Handle exceptions, show an alert dialog or a snackbar
+    } finally {
+      client.close();
+    }
+  }
+
+
+
   Widget _buildTextField({
     required String labelText,
     required String hintText,
     required IconData icon,
     bool obscureText = false,
+    required TextEditingController controller,
   }) {
     return TextFormField(
+      controller: controller,
       obscureText: obscureText,
       decoration: InputDecoration(
         labelText: labelText,

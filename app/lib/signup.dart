@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'dart:io';
+import 'package:flutter/services.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/io_client.dart';
+import 'main.dart';
 
 class SignupScreen extends StatefulWidget {
   @override
@@ -9,6 +14,7 @@ class SignupScreen extends StatefulWidget {
 
 class _SignupScreenState extends State<SignupScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  TextEditingController _usernameController = TextEditingController();
   TextEditingController _fullNameController = TextEditingController();
   TextEditingController _emailController = TextEditingController();
   TextEditingController _passwordController = TextEditingController();
@@ -18,45 +24,45 @@ class _SignupScreenState extends State<SignupScreen> {
       return;
     }
 
+    final String username = _usernameController.text;
     final String fullName = _fullNameController.text;
     final String email = _emailController.text;
     final String password = _passwordController.text;
 
+    final client = HttpClient()
+      ..badCertificateCallback = (X509Certificate cert, String host, int port) => host == '10.0.0.201';
+
     try {
-      final response = await http.post(
-        Uri.parse('http://10.0.0.201:5050/signup'), // Corrected URL
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
-        body: jsonEncode(<String, String>{
-          'fullname': fullName,
-          'email': email,
-          'password': password,
-        }),
-      );
+      final request = await client.postUrl(Uri.parse('https://10.0.0.201:5050/register'));
+      request.headers.set(HttpHeaders.contentTypeHeader, 'application/json; charset=UTF-8');
+      request.write(jsonEncode({
+        'username': username,
+        'fullname': fullName,
+        'email': email,
+        'password': password,
+      }));
+
+      final response = await request.close();
+      final responseBody = await response.transform(utf8.decoder).join();
 
       if (response.statusCode == 201) {
-        final Map<String, dynamic> data = json.decode(response.body);
-
-        final String message = data['message'];
-        final String userId = data['userId'];
-        final String accessToken = data['accessToken'];
-
-        print('Registration successful: $message');
-        print('User ID: $userId');
-        print('Access Token: $accessToken');
-
-        // Navigate to the home screen after successful registration
-        Navigator.pushReplacementNamed(context, '/home');
+        // Navigate to HomeScreen upon successful registration
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => MyHomePage()),
+        );
       } else {
-        final Map<String, dynamic> data = json.decode(response.body);
+        final Map<String, dynamic> data = json.decode(responseBody);
         final String errorMessage = data['message'];
         print('Failed to register: $errorMessage');
       }
     } catch (e) {
       print('An error occurred: $e');
+    } finally {
+      client.close();
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -82,6 +88,13 @@ class _SignupScreenState extends State<SignupScreen> {
                   ),
                 ),
                 SizedBox(height: 30),
+                _buildTextField(
+                  labelText: 'Username',
+                  hintText: 'Enter your username',
+                  icon: Icons.person_outline,
+                  controller: _usernameController,
+                ),
+                SizedBox(height: 15),
                 _buildTextField(
                   labelText: 'Full Name',
                   hintText: 'Enter your full name',
