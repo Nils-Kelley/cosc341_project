@@ -5,7 +5,7 @@ services:
     ports:
       - '3306:3306'
     environment:
-      - MYSQL_DATABASE=sql-341
+      - MYSQL_DATABASE=mysql-db
       - MYSQL_USER=webuser
       - MYSQL_PASSWORD=P@ssw0rd
       - MYSQL_ROOT_PASSWORD=rootpassword
@@ -18,7 +18,7 @@ services:
       context: .
       dockerfile: df.Dockerfile
     ports:
-      - '8081:8081'
+      - '5050:5050'
     depends_on:
       - mysql-db
     environment:

@@ -1,19 +1,28 @@
+require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
 const path = require('path');
 const mysql = require('mysql2');
 const bodyParser = require('body-parser');
 const fs = require('fs');
+const morgan = require('morgan');
 const multer = require('multer');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const http = require('http'); // Use 'http' module instead of 'https'
+const https = require('https');
 const rateLimit = require('express-rate-limit');
 const sharp = require('sharp'); // Import Sharp library for image processing
 
+
+// Read HTTPS certificates
+const privateKey = fs.readFileSync('key.pem', 'utf8');
+const certificate = fs.readFileSync('cert.pem', 'utf8');
+const passphrase = 'N3wP@ssPhr4s3!2023'; // Replace with your actual passphrase
+
+const credentials = { key: privateKey, cert: certificate, passphrase: passphrase };
+
 const app = express();
 const cors = require('cors');
-
 // Environment variables
 const sessionSecret = process.env.SESSION_SECRET;
 const dbHost = process.env.DB_HOST;
@@ -68,6 +77,7 @@ const pool = mysql.createPool({
   connectionLimit: 100,
 });
 
+
 // Utility functions
 function executeQuery(query, values) {
   return new Promise((resolve, reject) => {
@@ -86,7 +96,6 @@ function generateToken(userId) {
     expiresIn: '1h',
   });
 }
-
 function verifyToken(req, res, next) {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
@@ -102,6 +111,7 @@ function verifyToken(req, res, next) {
     next();
   });
 }
+
 
 // Rate limiting middleware
 const limiter = rateLimit({
@@ -177,19 +187,21 @@ app.post('/refresh', async (req, res) => {
   });
 });
 
+
+
 // Route for user registration
 app.post('/register', upload.single('profile_image'), function (req, res) {
   const { username, fullname, email, password } = req.body;
   const profile_image = req.file ? req.file.filename : null;
 
   bcrypt.hash(password, 10, function(err, hashedPassword) {
-    if (err) {
+    if(err) {
       console.error(err);
       return res.status(500).json({ message: 'An error occurred during user registration.', error: err });
     }
 
-    const query = 'INSERT INTO users (username, fullname, email, password, registration_date, last_login, verified, profile_image) VALUES (?, ?, ?, ?, NOW(), NOW(), 0, ?)';
-    const values = [username, fullname, email, hashedPassword, profile_image];
+    const query = 'INSERT INTO users (username, fullname, email, password, registration_date, last_login, verified) VALUES (?, ?, ?,  ?, NOW(), NOW(), 0)';
+    const values = [username, username, email, hashedPassword];
 
     executeQuery(query, values)
       .then((result) => {
@@ -238,6 +250,7 @@ app.post('/login', function (req, res) {
     });
 });
 
+
 app.post('/logout', function (req, res) {
   req.session.destroy(function (err) {
     if (err) {
@@ -249,9 +262,136 @@ app.post('/logout', function (req, res) {
   });
 });
 
-// Start the HTTP server
-const PORT = process.env.PORT || 8081; // Define the HTTP port
-const server = http.createServer(app);
-server.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
+app.get('/user', verifyToken, function (req, res) {
+  const userId = req.userId;
+  const query = 'SELECT * FROM users WHERE id = ?';
+  executeQuery(query, [userId])
+    .then((result) => {
+      if (result.length === 0) {
+        return res.status(404).json({ message: 'User not found.' });
+      }
+      return res.status(200).json(result[0]);
+    })
+    .catch((err) => {
+      console.error(err);
+      return res.status(500).json({ message: 'An error occurred while fetching user details.' });
+    });
 });
+
+
+
+
+// Add a new route for getting the current user's ID
+app.get('/get-current-user', verifyToken, async (req, res) => {
+  try {
+    const userId = req.userId;
+    res.status(200).json({ userId });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'An error occurred while getting the current user ID' });
+  }
+});
+app.get('/conversation/:conversationId/messages', verifyToken, async (req, res) => {
+  const conversationId = req.params.conversationId;
+
+  try {
+    const messagesQuery = `
+      SELECT m.*, u.username AS senderUsername, roAgg.offerPrice, roAgg.offerUnit
+      FROM messages m
+      INNER JOIN users u ON m.sender_id = u.id
+      LEFT JOIN (
+        SELECT cla.conversation_id, MAX(ro.price) AS offerPrice, MAX(ro.unit) AS offerUnit
+        FROM conversation_listing_association cla
+        LEFT JOIN listings l ON cla.listing_id = l.id
+        LEFT JOIN rental_offers ro ON l.id = ro.listing_id AND ro.status = 'Pending'
+        GROUP BY cla.conversation_id
+      ) AS roAgg ON m.conversation_id = roAgg.conversation_id
+      WHERE m.conversation_id = ?
+      ORDER BY m.sent_at ASC`;
+
+    const messages = await executeQuery(messagesQuery, [conversationId]);
+    console.log('Fetched messages successfully:', messages);
+    res.status(200).json({ message: 'Fetched messages successfully', messages });
+  } catch (err) {
+    console.error('Error fetching messages:', err);
+    res.status(500).json({ message: 'An error occurred while fetching messages' });
+  }
+});
+
+
+
+app.put('/update-profile', verifyToken, async (req, res) => {
+  const userId = req.userId;
+  const { updatedBio, updatedUsername } = req.body;
+
+  try {
+    console.log('Updating profile for user:', userId);
+    console.log('Updated Bio:', updatedBio);
+    console.log('Updated Username:', updatedUsername);
+
+    // Check if the updated username already exists
+    if (updatedUsername) {
+      const existingUsernameQuery = 'SELECT id FROM users WHERE username = ? AND id <> ?';
+      const existingUsernameResult = await executeQuery(existingUsernameQuery, [updatedUsername, userId]);
+
+      if (existingUsernameResult.length > 0) {
+        // Username already exists, send an error response
+        console.log('Username already exists. Please choose a different one.');
+        return res.status(400).json({ message: 'Username already exists. Please choose a different one.' });
+      }
+    }
+
+    // Update the user's bio and/or username in the database
+    let updateProfileQuery = 'UPDATE users SET';
+    const params = [];
+
+    if (updatedBio) {
+      updateProfileQuery += ' bio = ?,';
+      params.push(updatedBio);
+    }
+
+    if (updatedUsername) {
+      updateProfileQuery += ' username = ?,';
+      params.push(updatedUsername);
+    }
+
+    // If no fields are provided for update, return an error
+    if (params.length === 0) {
+      return res.status(400).json({ message: 'No fields provided for update.' });
+    }
+
+    // Remove the trailing comma
+    updateProfileQuery = updateProfileQuery.slice(0, -1);
+
+    // Add the WHERE clause
+    updateProfileQuery += ' WHERE id = ?';
+    params.push(userId);
+
+    console.log('Executing SQL Query:', updateProfileQuery, 'with params:', params);
+
+    // Execute the SQL query and handle errors
+    await executeQuery(updateProfileQuery, params);
+
+    console.log('Profile updated successfully');
+    res.status(200).json({ message: 'Profile updated successfully' });
+  } catch (err) {
+    console.error(err);
+    console.log('An error occurred while updating the profile.');
+
+    // Handle specific SQL syntax error
+    if (err.code === 'ER_PARSE_ERROR') {
+      return res.status(400).json({ message: 'Invalid update parameters. Please check your input.' });
+    }
+
+    res.status(500).json({ message: 'An error occurred while updating the profile.' });
+  }
+});
+
+
+// Start the server
+const port = process.env.PORT || 5050;
+const httpsServer = https.createServer(credentials, app);
+httpsServer.listen(port, () => {
+  console.log(`HTTPS Server running on port ${port}`);
+});
+//PEM passphrase: N3wP@ssPhr4s3!2023
