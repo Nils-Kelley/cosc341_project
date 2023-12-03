@@ -3,7 +3,7 @@ import 'profile_screen.dart';
 import 'home_screen.dart';
 import 'for_you.dart';
 import 'review_dialog.dart'; // Import the review dialog widget
-
+import 'signup_method.dart';
 void main() {
   runApp(const MyApp());
 }
@@ -25,7 +25,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSwatch(primarySwatch: Colors.blue),
         useMaterial3: true,
       ),
-      home: const MyHomePage(),
+      home: SignupMethod(), // Change this line
     );
   }
 }
