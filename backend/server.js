@@ -77,7 +77,6 @@ const pool = mysql.createPool({
   connectionLimit: 100,
 });
 
-
 // Utility functions
 function executeQuery(query, values) {
   return new Promise((resolve, reject) => {
@@ -96,6 +95,7 @@ function generateToken(userId) {
     expiresIn: '1h',
   });
 }
+
 function verifyToken(req, res, next) {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
@@ -111,7 +111,6 @@ function verifyToken(req, res, next) {
     next();
   });
 }
-
 
 // Rate limiting middleware
 const limiter = rateLimit({
@@ -169,10 +168,6 @@ app.post('/refresh', async (req, res) => {
     }
 
     const userId = decoded.userId;
-
-    // Extra checks like user verification, IP address matching, etc.
-    // You can implement these checks here.
-
     // Generate new access and refresh tokens
     const newAccessToken = generateToken(userId);
     const newRefreshToken = generateRefreshToken(userId);
@@ -186,8 +181,6 @@ app.post('/refresh', async (req, res) => {
     });
   });
 });
-
-
 
 // Route for user registration
 app.post('/register', upload.single('profile_image'), function (req, res) {
@@ -278,9 +271,6 @@ app.get('/user', verifyToken, function (req, res) {
     });
 });
 
-
-
-
 // Add a new route for getting the current user's ID
 app.get('/get-current-user', verifyToken, async (req, res) => {
   try {
@@ -291,34 +281,6 @@ app.get('/get-current-user', verifyToken, async (req, res) => {
     res.status(500).json({ message: 'An error occurred while getting the current user ID' });
   }
 });
-app.get('/conversation/:conversationId/messages', verifyToken, async (req, res) => {
-  const conversationId = req.params.conversationId;
-
-  try {
-    const messagesQuery = `
-      SELECT m.*, u.username AS senderUsername, roAgg.offerPrice, roAgg.offerUnit
-      FROM messages m
-      INNER JOIN users u ON m.sender_id = u.id
-      LEFT JOIN (
-        SELECT cla.conversation_id, MAX(ro.price) AS offerPrice, MAX(ro.unit) AS offerUnit
-        FROM conversation_listing_association cla
-        LEFT JOIN listings l ON cla.listing_id = l.id
-        LEFT JOIN rental_offers ro ON l.id = ro.listing_id AND ro.status = 'Pending'
-        GROUP BY cla.conversation_id
-      ) AS roAgg ON m.conversation_id = roAgg.conversation_id
-      WHERE m.conversation_id = ?
-      ORDER BY m.sent_at ASC`;
-
-    const messages = await executeQuery(messagesQuery, [conversationId]);
-    console.log('Fetched messages successfully:', messages);
-    res.status(200).json({ message: 'Fetched messages successfully', messages });
-  } catch (err) {
-    console.error('Error fetching messages:', err);
-    res.status(500).json({ message: 'An error occurred while fetching messages' });
-  }
-});
-
-
 
 app.put('/update-profile', verifyToken, async (req, res) => {
   const userId = req.userId;
@@ -387,11 +349,9 @@ app.put('/update-profile', verifyToken, async (req, res) => {
   }
 });
 
-
 // Start the server
 const port = process.env.PORT || 5050;
 const httpsServer = https.createServer(credentials, app);
 httpsServer.listen(port, () => {
   console.log(`HTTPS Server running on port ${port}`);
 });
-//PEM passphrase: N3wP@ssPhr4s3!2023

@@ -16,8 +16,6 @@ GRANT INSERT, UPDATE, DELETE, SELECT ON proj.* TO 'webuser'@'%';
 -- Flush privileges
 FLUSH PRIVILEGES;
 
--- Define the table structure
-
 -- Addresses table (for physical addresses)
 CREATE TABLE IF NOT EXISTS addresses (
   id INT AUTO_INCREMENT PRIMARY KEY,
