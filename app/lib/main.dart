@@ -4,6 +4,8 @@ import 'home_screen.dart';
 import 'for_you.dart';
 import 'review_dialog.dart'; // Import the review dialog widget
 import 'signup_method.dart';
+import 'settings_page.dart';
+
 void main() {
   runApp(const MyApp());
 }
@@ -139,7 +141,9 @@ class _MyHomePageState extends State<MyHomePage> {
         color: Colors.white,
       ),
       onPressed: () {
-        // Implement settings functionality here
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (context) => SettingsPage()),
+        );
       },
     );
   }

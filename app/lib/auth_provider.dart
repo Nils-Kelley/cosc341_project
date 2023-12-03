@@ -1,51 +1,55 @@
-import 'package:flutter/foundation.dart';
-import 'api_service.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'dart:convert'; // Add this line
+import 'package:flutter/material.dart';
 
-class AuthProvider with ChangeNotifier {
-  final ApiService _apiService = ApiService();
-  final FlutterSecureStorage _storage = FlutterSecureStorage();
-
+class AuthProvider extends ChangeNotifier {
   String? _token;
+  String? _refreshToken; // New field for refresh token
+  String? _userId; // New field for user ID
+  String? _username; // New field for username
 
-  bool get isAuthenticated => _token != null;
+  // Getter for access token
+  String? get token => _token;
 
-  Future<bool> register(String email, String password) async {
-    try {
-      var response = await _apiService.registerUser({'email': email, 'password': password});
-      if (response.statusCode == 200) {
-        // Handle successful registration
-        return true;
-      }
-      return false;
-    } catch (e) {
-      // Handle error
-      return false;
-    }
+  // Getter for refresh token
+  String? get refreshToken => _refreshToken;
+
+  String? getCurrentUserID() {
+    return _userId; // Return the user's ID
   }
 
-  Future<bool> login(String email, String password) async {
-    try {
-      var response = await _apiService.loginUser(email, password);
-      if (response.statusCode == 200) {
-        _token = jsonDecode(response.body)['token'];
-        await _storage.write(key: 'jwt_token', value: _token);
-        notifyListeners();
-        return true;
-      }
-      return false;
-    } catch (e) {
-      // Handle error
-      return false;
-    }
-  }
+  // Getter for user ID
+  String? get userId => _userId;
 
-  Future<void> logout() async {
-    await _storage.delete(key: 'jwt_token');
-    _token = null;
+  // Getter for username
+  String? get username => _username;
+
+  // Method to set the access token and notify listeners
+  void setToken(String token) {
+    _token = token;
     notifyListeners();
   }
 
-// Additional methods as needed
+  // Method to set the refresh token and notify listeners
+  void setRefreshToken(String refreshToken) {
+    _refreshToken = refreshToken;
+    notifyListeners();
+  }
+
+// Inside AuthProvider's setUserData method
+  void setUserData(String userId, String username) {
+    _userId = userId;
+    _username = username;
+    notifyListeners();
+    print("User ID and username set: $_userId, $_username");
+  }
+
+  // Method to clear the access token and optionally the refresh token
+  void clearToken({bool clearRefreshToken = true}) {
+    _token = null;
+    if (clearRefreshToken) {
+      _refreshToken = null;
+    }
+    // Your code to remove tokens and user data from storage or state management
+    notifyListeners();
+  }
 }
+// Add methods to handle login, logout, etc., and call notifyListeners() when you update the state
