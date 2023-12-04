@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'reviews.dart'; // Import the reviews.dart file
 
 class ReviewDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      backgroundColor: Colors.white, // Set the background color to white
+      backgroundColor: Colors.white,
       title: Text(
         'Leave a Review',
         style: TextStyle(
@@ -21,15 +22,15 @@ class ReviewDialog extends StatelessWidget {
             'Select an option below to leave a review:',
             style: TextStyle(
               fontSize: 16,
-              color: Colors.black87, // Adjust text color for readability
+              color: Colors.black87,
             ),
           ),
           SizedBox(height: 20),
-          _reviewButton(context, 'Leave a Review for a Business', Icons.business, Colors.lightBlue),
+          _reviewButton(context, 'Leave a Review for a Business', Icons.business, Colors.lightBlue, 'business'), // Updated
           SizedBox(height: 12),
-          _reviewButton(context, 'Leave a Review for a Restaurant', Icons.restaurant, Colors.lightBlue[200]!), // Lighter shade for variation
+          _reviewButton(context, 'Leave a Review for a Restaurant', Icons.restaurant, Colors.lightBlue[200]!, 'restaurant'), // Updated
           SizedBox(height: 12),
-          _reviewButton(context, 'Leave a Review for an Item', Icons.shopping_cart, Colors.lightBlue[300]!), // Even lighter shade
+          _reviewButton(context, 'Leave a Review for an Item', Icons.shopping_cart, Colors.lightBlue[300]!, 'item'), // Updated
         ],
       ),
       actions: [
@@ -37,14 +38,14 @@ class ReviewDialog extends StatelessWidget {
           onPressed: () => Navigator.of(context).pop(),
           child: Text(
             'Cancel',
-            style: TextStyle(fontSize: 16, color: Colors.redAccent), // Keep for emphasis on the cancellation action
+            style: TextStyle(fontSize: 16, color: Colors.redAccent),
           ),
         ),
       ],
     );
   }
 
-  Widget _reviewButton(BuildContext context, String text, IconData icon, Color color) {
+  Widget _reviewButton(BuildContext context, String text, IconData icon, Color color, String reviewType) {
     return ElevatedButton.icon(
       icon: Icon(icon, color: Colors.white),
       label: Text(
@@ -52,7 +53,9 @@ class ReviewDialog extends StatelessWidget {
         style: TextStyle(fontSize: 16, color: Colors.white),
       ),
       onPressed: () {
-        // Implement functionality here
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (context) => ReviewsPage(reviewType: reviewType)),
+        );
       },
       style: ElevatedButton.styleFrom(
         primary: color,
