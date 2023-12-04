@@ -69,7 +69,6 @@ CREATE TABLE IF NOT EXISTS subcategories (
   FOREIGN KEY (parent_category_id) REFERENCES categories (id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-
 -- Refresh Tokens table
 CREATE TABLE IF NOT EXISTS refresh_tokens (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -83,12 +82,10 @@ CREATE TABLE IF NOT EXISTS refresh_tokens (
 CREATE TABLE IF NOT EXISTS reviews (
   id INT AUTO_INCREMENT PRIMARY KEY,
   user_id INT,
-  listing_id INT,
   rating INT NOT NULL,
   comment TEXT,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
-  FOREIGN KEY (listing_id) REFERENCES listings (id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 
@@ -100,6 +97,5 @@ CREATE TABLE IF NOT EXISTS notifications (
   is_viewed BOOLEAN DEFAULT FALSE,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
-  FOREIGN KEY (message_id) REFERENCES messages (id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
