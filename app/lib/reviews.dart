@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
+import 'dart:convert';
+import 'dart:io';
+import 'package:provider/provider.dart';
+import 'auth_provider.dart';
+import 'package:http/http.dart' as http;
 
 class ReviewsPage extends StatefulWidget {
   final String reviewType;
@@ -22,8 +27,51 @@ class _ReviewsPageState extends State<ReviewsPage> {
     super.dispose();
   }
 
-  void _submitReview() {
-    // Implementation of submission logic
+  Future<void> _submitReview(BuildContext context) async {
+    final String apiUrl = 'https://10.0.0.201:5050/submit-review'; // Replace with your server's URL
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final String? token = authProvider.token; // Get token from AuthProvider
+    print('Retrieved token: $token');
+
+    if (token == null) {
+      print('No token found');
+      // Handle the case where there is no token (user not logged in)
+      return;
+    }
+
+    final client = HttpClient()
+      ..badCertificateCallback = (X509Certificate cert, String host, int port) => true; // Bypass handshake error
+
+    try {
+      final request = await client.postUrl(Uri.parse(apiUrl));
+      request.headers.set(HttpHeaders.contentTypeHeader, 'application/json; charset=UTF-8');
+      request.headers.set(HttpHeaders.authorizationHeader, 'Bearer $token');
+      request.write(jsonEncode({
+        'reviewType': widget.reviewType,
+        'name': _businessNameController.text,
+        'rating': _rating,
+        'comment': _reviewController.text,
+      }));
+
+      final response = await request.close();
+      final responseBody = await response.transform(utf8.decoder).join();
+
+      print('Response Status Code: ${response.statusCode}');
+      print('Response Body: $responseBody'); // Debugging line
+
+      if (response.statusCode == 200) {
+        print('Review submitted successfully');
+        // Additional logic for success (e.g., showing a confirmation dialog)
+      } else {
+        print('Failed to submit review');
+        // Handle submission failure, show an alert dialog or a snackbar
+      }
+    } catch (e) {
+      print('An error occurred: $e');
+      // Handle exceptions, show an alert dialog or a snackbar
+    } finally {
+      client.close();
+    }
   }
 
   InputDecoration _inputDecoration(String hintText) {
@@ -98,7 +146,9 @@ class _ReviewsPageState extends State<ReviewsPage> {
             SizedBox(height: 30),
             Center(
               child: ElevatedButton(
-                onPressed: _submitReview,
+                onPressed: () {
+                  _submitReview(context);
+                },
                 child: Text('Submit Review'),
                 style: ElevatedButton.styleFrom(
                   primary: Colors.blue[800],
@@ -111,6 +161,7 @@ class _ReviewsPageState extends State<ReviewsPage> {
                   ),
                 ),
               ),
+
             ),
           ],
         ),

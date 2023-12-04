@@ -22,11 +22,12 @@ class AuthProvider extends ChangeNotifier {
   // Getter for username
   String? get username => _username;
 
-  // Method to set the access token and notify listeners
   void setToken(String token) {
     _token = token;
+    print("Token set in AuthProvider: $_token");
     notifyListeners();
   }
+
 
   // Method to set the refresh token and notify listeners
   void setRefreshToken(String refreshToken) {

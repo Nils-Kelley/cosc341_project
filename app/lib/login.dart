@@ -3,10 +3,14 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:http/io_client.dart';
 import 'main.dart';
+import 'api_service.dart';
+import 'auth_provider.dart';
+import 'package:provider/provider.dart';
 
 class LoginScreen extends StatelessWidget {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final ApiService _apiService = ApiService();
 
   @override
   Widget build(BuildContext context) {
@@ -110,42 +114,30 @@ class LoginScreen extends StatelessWidget {
     final String email = _emailController.text;
     final String password = _passwordController.text;
 
-    final client = HttpClient()
-      ..badCertificateCallback = (X509Certificate cert, String host, int port) => true; // Bypass handshake error
-
     try {
-      final request = await client.postUrl(Uri.parse('https://10.0.0.201:5050/login'));
-      request.headers.set(HttpHeaders.contentTypeHeader, 'application/json; charset=UTF-8');
-      request.write(jsonEncode({
-        'identifier': email,
-        'password': password,
-      }));
-
-      final response = await request.close();
-      final responseBody = await response.transform(utf8.decoder).join();
-
-      print('Response Status Code: ${response.statusCode}');
-      print('Response Body: $responseBody'); // Debugging line
+      final response = await _apiService.loginUser(email, password);
 
       if (response.statusCode == 200) {
-        // Navigate to HomePage upon successful login
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => MyHomePage()), // Replace HomePage with the actual home page widget
-        );
+        final responseData = json.decode(response.body);
+        final token = responseData['token'];
+        if (token != null) {
+          // Store the token using AuthProvider
+          Provider.of<AuthProvider>(context, listen: false).setToken(token);
+
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => MyHomePage()),
+          );
+        } else {
+          print('Login successful, but no token received');
+        }
       } else {
         print('Failed to login');
-        // Handle login failure, show an alert dialog or a snackbar
       }
     } catch (e) {
       print('An error occurred: $e');
-      // Handle exceptions, show an alert dialog or a snackbar
-    } finally {
-      client.close();
     }
   }
-
-
 
   Widget _buildTextField({
     required String labelText,

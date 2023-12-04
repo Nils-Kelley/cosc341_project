@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'auth_provider.dart'; // Import your AuthProvider
 import 'profile_screen.dart';
 import 'home_screen.dart';
 import 'for_you.dart';
-import 'review_dialog.dart'; // Import the review dialog widget
+import 'review_dialog.dart';
 import 'signup_method.dart';
 import 'settings_page.dart';
 
@@ -15,19 +17,22 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'RateIt',
-      theme: ThemeData(
-        primaryColor: Colors.blue,
-        scaffoldBackgroundColor: Colors.white,
-        appBarTheme: AppBarTheme(
-          backgroundColor: Colors.blue,
-          centerTitle: true,
+    return ChangeNotifierProvider(
+      create: (context) => AuthProvider(),
+      child: MaterialApp(
+        title: 'RateIt',
+        theme: ThemeData(
+          primaryColor: Colors.blue,
+          scaffoldBackgroundColor: Colors.white,
+          appBarTheme: AppBarTheme(
+            backgroundColor: Colors.blue,
+            centerTitle: true,
+          ),
+          colorScheme: ColorScheme.fromSwatch(primarySwatch: Colors.blue),
+          useMaterial3: true,
         ),
-        colorScheme: ColorScheme.fromSwatch(primarySwatch: Colors.blue),
-        useMaterial3: true,
+        home: SignupMethod(),
       ),
-      home: SignupMethod(), // Change this line
     );
   }
 }
@@ -58,7 +63,7 @@ class _MyHomePageState extends State<MyHomePage> {
     await showDialog(
       context: context,
       builder: (BuildContext context) {
-        return ReviewDialog(); // Use the ReviewDialog widget here
+        return ReviewDialog();
       },
     );
   }
@@ -114,7 +119,7 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          _showReviewDialog(context); // Show the review dialog
+          _showReviewDialog(context);
         },
         backgroundColor: Colors.blue,
         child: Icon(Icons.add),
