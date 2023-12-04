@@ -282,6 +282,40 @@ app.get('/get-current-user', verifyToken, async (req, res) => {
   }
 });
 
+// Route to submit a review
+app.post('/submit-review', verifyToken, async (req, res) => {
+  const userId = req.userId;
+  const { reviewType, name, rating, comment } = req.body;
+
+  try {
+    // Check if the business/item exists
+    let table = reviewType === 'business' ? 'businesses' : 'items';
+    let checkQuery = `SELECT id FROM ${table} WHERE name = ?`;
+    let checkResult = await executeQuery(checkQuery, [name]);
+
+    let itemId;
+    if (checkResult.length > 0) {
+      // Business/item exists
+      itemId = checkResult[0].id;
+    } else {
+      // Create new business/item
+      let insertQuery = `INSERT INTO ${table} (name) VALUES (?)`;
+      let insertResult = await executeQuery(insertQuery, [name]);
+      itemId = insertResult.insertId;
+    }
+
+    // Insert the review
+    let reviewQuery = 'INSERT INTO reviews (user_id, reviewable_id, reviewable_type, rating, comment) VALUES (?, ?, ?, ?, ?)';
+    await executeQuery(reviewQuery, [userId, itemId, reviewType, rating, comment]);
+
+    res.status(200).json({ message: 'Review submitted successfully' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'An error occurred while submitting the review.' });
+  }
+});
+
+
 app.put('/update-profile', verifyToken, async (req, res) => {
   const userId = req.userId;
   const { updatedBio, updatedUsername } = req.body;

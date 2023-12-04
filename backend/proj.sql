@@ -78,24 +78,32 @@ CREATE TABLE IF NOT EXISTS refresh_tokens (
   FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Reviews table
+-- Businesses table
+CREATE TABLE IF NOT EXISTS businesses (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(255) NOT NULL UNIQUE,
+  address_id INT,
+  FOREIGN KEY (address_id) REFERENCES addresses (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Items table
+CREATE TABLE IF NOT EXISTS items (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  category_id INT,
+  subcategory_id INT,
+  FOREIGN KEY (category_id) REFERENCES categories (id),
+  FOREIGN KEY (subcategory_id) REFERENCES subcategories (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Reviews table with polymorphic association
 CREATE TABLE IF NOT EXISTS reviews (
   id INT AUTO_INCREMENT PRIMARY KEY,
   user_id INT,
-  rating INT NOT NULL,
+  reviewable_id INT,
+  reviewable_type VARCHAR(50),
+  rating DECIMAL(2, 1) NOT NULL,
   comment TEXT,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+  FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
-
--- Notifications table
-CREATE TABLE IF NOT EXISTS notifications (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  user_id INT NOT NULL,
-  message_id INT NOT NULL,
-  is_viewed BOOLEAN DEFAULT FALSE,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
