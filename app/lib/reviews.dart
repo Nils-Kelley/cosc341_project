@@ -62,6 +62,8 @@ class _ReviewsPageState extends State<ReviewsPage> {
       if (response.statusCode == 200) {
         print('Review submitted successfully');
         // Additional logic for success (e.g., showing a confirmation dialog)
+        Navigator.of(context).pop();
+
       } else {
         print('Failed to submit review');
         // Handle submission failure, show an alert dialog or a snackbar
