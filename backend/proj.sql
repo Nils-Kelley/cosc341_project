@@ -7,7 +7,6 @@ CREATE DATABASE IF NOT EXISTS proj;
 USE proj;
 
 -- Create a webuser account for accessing the database from Apache/PHP with limited permissions
--- Note: This is different from the website's 'user' account
 CREATE USER IF NOT EXISTS 'webuser'@'mysql-db' IDENTIFIED BY 'P@ssw0rd';
 CREATE USER IF NOT EXISTS 'webuser'@'%' IDENTIFIED BY 'P@ssw0rd';
 GRANT INSERT, UPDATE, DELETE, SELECT ON proj.* TO 'webuser'@'mysql-db';
@@ -16,7 +15,7 @@ GRANT INSERT, UPDATE, DELETE, SELECT ON proj.* TO 'webuser'@'%';
 -- Flush privileges
 FLUSH PRIVILEGES;
 
--- Addresses table (for physical addresses)
+-- Addresses table
 CREATE TABLE IF NOT EXISTS addresses (
   id INT AUTO_INCREMENT PRIMARY KEY,
   address VARCHAR(255),
@@ -45,7 +44,7 @@ CREATE TABLE IF NOT EXISTS users (
   verified BOOLEAN DEFAULT FALSE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- User Location Data table (for tracking user locations)
+-- User Location Data table
 CREATE TABLE IF NOT EXISTS user_location_data (
   id INT AUTO_INCREMENT PRIMARY KEY,
   user_id INT,
@@ -78,22 +77,33 @@ CREATE TABLE IF NOT EXISTS refresh_tokens (
   FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Businesses table
+-- Businesses table with description
 CREATE TABLE IF NOT EXISTS businesses (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(255) NOT NULL UNIQUE,
   address_id INT,
+  description TEXT,
   FOREIGN KEY (address_id) REFERENCES addresses (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Items table
+-- Items table with description
 CREATE TABLE IF NOT EXISTS items (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(255) NOT NULL,
   category_id INT,
   subcategory_id INT,
+  description TEXT,
   FOREIGN KEY (category_id) REFERENCES categories (id),
   FOREIGN KEY (subcategory_id) REFERENCES subcategories (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Restaurants table with description
+CREATE TABLE IF NOT EXISTS restaurants (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(255) NOT NULL UNIQUE,
+  address_id INT,
+  description TEXT,
+  FOREIGN KEY (address_id) REFERENCES addresses (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Reviews table with polymorphic association

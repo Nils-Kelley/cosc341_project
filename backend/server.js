@@ -321,12 +321,11 @@ app.get('/reviews', async (req, res) => {
 
     const query = `
       SELECT
-        IFNULL(b.name, i.name) AS name,
+        b.name AS name,
         AVG(r.rating) AS averageRating
       FROM reviews r
       LEFT JOIN businesses b ON r.reviewable_id = b.id AND r.reviewable_type = 'business'
-      LEFT JOIN items i ON r.reviewable_id = i.id AND r.reviewable_type = 'item'
-      WHERE r.reviewable_type = ?
+      WHERE r.reviewable_type = 'business'
       GROUP BY r.reviewable_id
     `;
 
