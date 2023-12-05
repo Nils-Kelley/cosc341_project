@@ -36,7 +36,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   }
 
   Future<void> _fetchReviews(String reviewType) async {
-    final String apiUrl = 'https://10.0.0.201:5050/reviews?type=$reviewType'; // Replace with your server's URL
+    final String apiUrl = 'https://10.0.0.201:5050/reviews?type=$reviewType'; // Include selected tab in the URL
     final client = HttpClient()
       ..badCertificateCallback = (X509Certificate cert, String host, int port) => true;
 
@@ -75,6 +75,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             controller: _tabController, // Assign TabController to the TabBar
             onTap: (index) {
               setState(() {
+                _selectedTabIndex = index;
+                // Fetch reviews based on the selected tab
                 switch (index) {
                   case 0:
                     _fetchReviews('business');
@@ -86,7 +88,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     _fetchReviews('items');
                     break;
                 }
-                _selectedTabIndex = index;
               });
             },
             tabs: [
