@@ -315,6 +315,33 @@ app.post('/submit-review', verifyToken, async (req, res) => {
   }
 });
 
+app.get('/reviews', async (req, res) => {
+  try {
+    const reviewableType = req.query.type || 'business'; // Default to 'business' if not specified
+
+    const query = `
+      SELECT
+        IFNULL(b.name, i.name) AS name,
+        AVG(r.rating) AS averageRating
+      FROM reviews r
+      LEFT JOIN businesses b ON r.reviewable_id = b.id AND r.reviewable_type = 'business'
+      LEFT JOIN items i ON r.reviewable_id = i.id AND r.reviewable_type = 'item'
+      WHERE r.reviewable_type = ?
+      GROUP BY r.reviewable_id
+    `;
+
+    const reviews = await executeQuery(query, [reviewableType]);
+    res.json(reviews.map(review => ({
+      name: review.name,
+      rating: parseFloat(parseFloat(review.averageRating).toFixed(1)) // Ensure averageRating is a float before rounding
+    })));
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'An error occurred while fetching reviews.' });
+  }
+});
+
+
 
 app.put('/update-profile', verifyToken, async (req, res) => {
   const userId = req.userId;
