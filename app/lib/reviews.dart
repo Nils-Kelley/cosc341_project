@@ -5,7 +5,7 @@ import 'dart:io';
 import 'package:provider/provider.dart';
 import 'auth_provider.dart';
 import 'package:http/http.dart' as http;
-
+import 'main.dart';
 class ReviewsPage extends StatefulWidget {
   final String reviewType;
 
@@ -62,7 +62,10 @@ class _ReviewsPageState extends State<ReviewsPage> {
       if (response.statusCode == 200) {
         print('Review submitted successfully');
         // Additional logic for success (e.g., showing a confirmation dialog)
-        Navigator.of(context).pop();
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => MyHomePage()),
+        );
 
       } else {
         print('Failed to submit review');

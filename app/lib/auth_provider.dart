@@ -28,14 +28,13 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-
   // Method to set the refresh token and notify listeners
   void setRefreshToken(String refreshToken) {
     _refreshToken = refreshToken;
     notifyListeners();
   }
 
-// Inside AuthProvider's setUserData method
+  // Inside AuthProvider's setUserData method
   void setUserData(String userId, String username) {
     _userId = userId;
     _username = username;
@@ -52,5 +51,6 @@ class AuthProvider extends ChangeNotifier {
     // Your code to remove tokens and user data from storage or state management
     notifyListeners();
   }
-}
+
 // Add methods to handle login, logout, etc., and call notifyListeners() when you update the state
+}

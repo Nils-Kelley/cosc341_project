@@ -31,15 +31,33 @@ class ApiService {
 
   Future<http.Response> registerUser(Map<String, dynamic> userData) async {
     var url = Uri.parse('$baseUrl/register');
-    var response = await http.post(url, body: jsonEncode(userData), headers: {"Content-Type": "application/json"});
-    return response;
-  }
+    var client = createHttpClient(); // Use the custom http client
 
+    try {
+      var response = await client.post(
+          url,
+          headers: {"Content-Type": "application/json"},
+          body: jsonEncode(userData)
+      );
+      return response;
+    } finally {
+      client.close(); // Close the client
+    }
+  }
 
   Future<http.Response> logoutUser(String token) async {
     var url = Uri.parse('$baseUrl/logout');
-    var response = await http.post(url, headers: {"Authorization": "Bearer $token"});
-    return response;
+    var client = createHttpClient(); // Use the custom http client
+
+    try {
+      var response = await client.post(
+          url,
+          headers: {"Authorization": "Bearer $token"}
+      );
+      return response;
+    } finally {
+      client.close(); // Close the client
+    }
   }
 
 // Add other methods as needed

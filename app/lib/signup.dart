@@ -5,6 +5,8 @@ import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/io_client.dart';
 import 'main.dart';
+import 'auth_provider.dart';
+import 'package:provider/provider.dart';
 
 class SignupScreen extends StatefulWidget {
   @override
@@ -45,11 +47,19 @@ class _SignupScreenState extends State<SignupScreen> {
       final responseBody = await response.transform(utf8.decoder).join();
 
       if (response.statusCode == 201) {
-        // Navigate to HomeScreen upon successful registration
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => MyHomePage()),
-        );
+        final responseData = json.decode(responseBody);
+        final token = responseData['token']; // Assuming your API returns a token
+        if (token != null) {
+          // Store the token using AuthProvider
+          Provider.of<AuthProvider>(context, listen: false).setToken(token);
+          // Navigate to HomeScreen upon successful registration
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => MyHomePage()),
+          );
+        } else {
+          print('Registration successful, but no token received');
+        }
       } else {
         final Map<String, dynamic> data = json.decode(responseBody);
         final String errorMessage = data['message'];
