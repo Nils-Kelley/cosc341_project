@@ -30,6 +30,11 @@ environment:
 dependencies:
   http: ^1.0.2
   flutter_secure_storage: ^9.0.0
+  flutter_svg: ^2.0.9
+  google_maps_flutter: ^2.5.0
+  google_fonts: ^6.1.0
+  flutter_rating_bar: ^4.0.1
+  provider: ^6.1.1
   flutter:
     sdk: flutter
 
@@ -39,10 +44,6 @@ dependencies:
   cupertino_icons: ^1.0.2
 
 dev_dependencies:
-  flutter_svg: ^2.0.9
-  google_fonts: ^6.1.0
-  flutter_rating_bar: ^4.0.1
-  provider: ^6.1.1
   flutter_test:
     sdk: flutter
 

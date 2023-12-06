@@ -7,6 +7,7 @@ import 'for_you.dart';
 import 'review_dialog.dart';
 import 'signup_method.dart';
 import 'settings_page.dart';
+import 'map.dart';
 
 void main() {
   runApp(const MyApp());
@@ -50,6 +51,7 @@ class _MyHomePageState extends State<MyHomePage> {
   final List<Widget> _widgetOptions = <Widget>[
     HomeScreen(),
     ForYouPage(),
+    MapScreen(), // Added MapScreen
     ProfileScreen(),
   ];
 
@@ -107,6 +109,10 @@ class _MyHomePageState extends State<MyHomePage> {
           BottomNavigationBarItem(
             icon: Icon(Icons.star),
             label: 'For You',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.map), // Changed to map icon
+            label: 'Map',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person),
