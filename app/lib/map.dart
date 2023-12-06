@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:location/location.dart';
 import 'dart:async';
 
 class MapScreen extends StatefulWidget {
@@ -13,19 +14,52 @@ class MapScreen extends StatefulWidget {
 
 class _MapScreenState extends State<MapScreen> {
   Completer<GoogleMapController> _controller = Completer();
-
-  // Initial position of the map
-  static const LatLng _center = const LatLng(37.77483, -122.41942); // Example: San Francisco coordinates
-
-  // Initial camera position
-  static const CameraPosition _initialCameraPosition = CameraPosition(
-    target: _center,
-    zoom: 11.0,
-  );
+  Location location = new Location();
+  LatLng _currentLocation = LatLng(49.8863, -119.4966);
+  Set<Circle> _circles = Set<Circle>();
 
   @override
   void initState() {
     super.initState();
+    _getCurrentLocation();
+  }
+
+  Future<void> _getCurrentLocation() async {
+    LocationData currentLocation;
+    try {
+      currentLocation = await location.getLocation();
+      setState(() {
+        _currentLocation = LatLng(currentLocation.latitude!, currentLocation.longitude!);
+        _updateCircle();
+      });
+      _goToCurrentLocation();
+    } catch (e) {
+      print(e);
+      _updateCircle(); // Update circle with default location
+    }
+  }
+
+  void _updateCircle() {
+    _circles.clear();
+    _circles.add(Circle(
+      circleId: CircleId("user_location"),
+      center: _currentLocation,
+      radius: 1000, // radius in meters (1 km)
+      fillColor: Colors.blue.withOpacity(0.5),
+      strokeColor: Colors.blue,
+      strokeWidth: 2,
+    ));
+  }
+
+
+  Future<void> _goToCurrentLocation() async {
+    final GoogleMapController controller = await _controller.future;
+    controller.animateCamera(CameraUpdate.newCameraPosition(
+      CameraPosition(
+        target: _currentLocation,
+        zoom: 11.0,
+      ),
+    ));
   }
 
   @override
@@ -33,10 +67,14 @@ class _MapScreenState extends State<MapScreen> {
     return Scaffold(
       body: GoogleMap(
         mapType: MapType.normal,
-        initialCameraPosition: _initialCameraPosition,
+        initialCameraPosition: CameraPosition(
+          target: _currentLocation,
+          zoom: 11.0,
+        ),
         onMapCreated: (GoogleMapController controller) {
           _controller.complete(controller);
         },
+        circles: _circles, // Add the circles set here
       ),
     );
   }

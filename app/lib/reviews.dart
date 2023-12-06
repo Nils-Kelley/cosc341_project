@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'dart:convert';
-import 'dart:io';
-import 'package:provider/provider.dart';
-import 'auth_provider.dart';
 import 'package:http/http.dart' as http;
-import 'main.dart';
+import 'package:http/io_client.dart';
+import 'dart:io';
+import 'auth_provider.dart';
+import 'package:provider/provider.dart';
+
 class ReviewsPage extends StatefulWidget {
   final String reviewType;
 
@@ -16,68 +17,117 @@ class ReviewsPage extends StatefulWidget {
 }
 
 class _ReviewsPageState extends State<ReviewsPage> {
-  final TextEditingController _businessNameController = TextEditingController();
+  final TextEditingController _nameController = TextEditingController();
   final TextEditingController _reviewController = TextEditingController();
+  final TextEditingController _addressController = TextEditingController();
+  final TextEditingController _postalCodeController = TextEditingController();
+  final TextEditingController _stateController = TextEditingController();
+  final TextEditingController _countryController = TextEditingController();
+  final TextEditingController _cityController = TextEditingController();
+
   double _rating = 0.0;
+  List<String> _existingLocations = [];
+  String? _selectedLocation;
+
+  bool _showAdditionalFields = false;
+
+  http.Client createHttpClient() {
+    final ioClient = HttpClient()
+      ..badCertificateCallback = (X509Certificate cert, String host, int port) => true;
+    return IOClient(ioClient);
+  }
 
   @override
   void dispose() {
-    _businessNameController.dispose();
+    _nameController.dispose();
     _reviewController.dispose();
+    _addressController.dispose();
+    _postalCodeController.dispose();
+    _cityController.dispose();
+    _stateController.dispose();
+    _countryController.dispose();
     super.dispose();
   }
 
-  Future<void> _submitReview(BuildContext context) async {
-    final String apiUrl = 'https://10.0.0.201:5050/submit-review'; // Replace with your server's URL
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final String? token = authProvider.token; // Get token from AuthProvider
-    print('Retrieved token: $token');
-
-    if (token == null) {
-      print('No token found');
-      // Handle the case where there is no token (user not logged in)
-      return;
-    }
-
-    final client = HttpClient()
-      ..badCertificateCallback = (X509Certificate cert, String host, int port) => true; // Bypass handshake error
+  Future<void> _fetchExistingLocations(String name) async {
+    final apiUrl = 'https://10.0.0.201:5050/reviews/existing-locations?name=$name';
 
     try {
-      final request = await client.postUrl(Uri.parse(apiUrl));
-      request.headers.set(HttpHeaders.contentTypeHeader, 'application/json; charset=UTF-8');
-      request.headers.set(HttpHeaders.authorizationHeader, 'Bearer $token');
-      request.write(jsonEncode({
+      final response = await http.get(Uri.parse(apiUrl));
+
+      if (response.statusCode == 200) {
+        final locations = jsonDecode(response.body);
+        setState(() {
+          _existingLocations = List<String>.from(locations);
+        });
+      } else {
+        // Handle the case where fetching existing locations fails
+        // Show an error message to the user
+
+      }
+    } catch (e) {
+      // Handle network errors
+      // Show an error message to the user
+    }
+  }
+
+  Future<void> _submitReview(BuildContext context) async {
+    final String apiUrl = 'https://10.0.0.201:5050/submit-review';
+    final AuthProvider authProvider = Provider.of<AuthProvider>(context, listen: false); // Use the same instance of AuthProvider
+
+    try {
+      final customClient = createHttpClient();
+      final request = http.Request('POST', Uri.parse(apiUrl));
+      request.headers['Content-Type'] = 'application/json';
+
+      final String? token = authProvider.token;
+
+      if (token != null) {
+        request.headers['Authorization'] = 'Bearer $token';
+      }
+
+      final reviewData = {
         'reviewType': widget.reviewType,
-        'name': _businessNameController.text,
+        'name': _nameController.text,
         'rating': _rating,
         'comment': _reviewController.text,
-      }));
+        'location': _selectedLocation,
+      };
 
-      final response = await request.close();
-      final responseBody = await response.transform(utf8.decoder).join();
+      if (_showAdditionalFields) {
+        reviewData['address'] = _addressController.text;
+        reviewData['postalCode'] = _postalCodeController.text;
+        reviewData['city'] = _cityController.text;
+        reviewData['state'] = _stateController.text;
+        reviewData['country'] = _countryController.text;
+      }
+
+      request.body = jsonEncode(reviewData);
+      final response = await customClient.send(request);
+      final responseBody = await response.stream.bytesToString();
 
       print('Response Status Code: ${response.statusCode}');
-      print('Response Body: $responseBody'); // Debugging line
+      print('Response Body: $responseBody');
 
       if (response.statusCode == 200) {
         print('Review submitted successfully');
-        // Additional logic for success (e.g., showing a confirmation dialog)
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => MyHomePage()),
-        );
+        // Show a success message to the user
 
+        // Navigate back to the previous screen
+        Navigator.pop(context);
       } else {
         print('Failed to submit review');
-        // Handle submission failure, show an alert dialog or a snackbar
+        // Handle submission failure and show an error message to the user
+
+
       }
     } catch (e) {
       print('An error occurred: $e');
-      // Handle exceptions, show an alert dialog or a snackbar
-    } finally {
-      client.close();
+      // Handle exceptions and show an error message to the user
+
     }
   }
+
 
   InputDecoration _inputDecoration(String hintText) {
     return InputDecoration(
@@ -112,9 +162,90 @@ class _ReviewsPageState extends State<ReviewsPage> {
             ),
             SizedBox(height: 10),
             TextField(
-              controller: _businessNameController,
+              controller: _nameController,
+              onChanged: (name) {
+                _fetchExistingLocations(name);
+              },
               decoration: _inputDecoration('Enter name here'),
             ),
+            SizedBox(height: 20),
+            Text(
+              'Select a Location (or Add a New One)',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.blue[800]),
+            ),
+            SizedBox(height: 10),
+            DropdownButton<String>(
+              value: _selectedLocation,
+              onChanged: (location) {
+                setState(() {
+                  _selectedLocation = location;
+                  _showAdditionalFields = location == 'Add New Location';
+                });
+              },
+              items: [
+                for (String location in _existingLocations)
+                  DropdownMenuItem<String>(
+                    value: location,
+                    child: Text(location),
+                  ),
+                DropdownMenuItem<String>(
+                  value: 'Add New Location',
+                  child: Text('Add New Location'),
+                ),
+              ],
+            ),
+            if (_showAdditionalFields) ...[
+              SizedBox(height: 20),
+              Text(
+                'Address',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.blue[800]),
+              ),
+              SizedBox(height: 10),
+              TextField(
+                controller: _addressController,
+                decoration: _inputDecoration('Enter address here'),
+              ),
+              SizedBox(height: 20),
+              Text(
+                'Postal Code',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.blue[800]),
+              ),
+              SizedBox(height: 10),
+              TextField(
+                controller: _postalCodeController,
+                decoration: _inputDecoration('Enter postal code here'),
+              ),
+              SizedBox(height: 20),
+              Text(
+                'City',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.blue[800]),
+              ),
+              SizedBox(height: 10),
+              TextField(
+                controller: _cityController,
+                decoration: _inputDecoration('Enter city here'),
+              ),
+              SizedBox(height: 20),
+              Text(
+                'State',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.blue[800]),
+              ),
+              SizedBox(height: 10),
+              TextField(
+                controller: _stateController,
+                decoration: _inputDecoration('Enter state here'),
+              ),
+              SizedBox(height: 20),
+              Text(
+                'Country',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.blue[800]),
+              ),
+              SizedBox(height: 10),
+              TextField(
+                controller: _countryController,
+                decoration: _inputDecoration('Enter country here'),
+              ),
+            ],
             SizedBox(height: 20),
             Text(
               'Your Rating',
@@ -166,7 +297,6 @@ class _ReviewsPageState extends State<ReviewsPage> {
                   ),
                 ),
               ),
-
             ),
           ],
         ),
