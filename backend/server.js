@@ -274,46 +274,43 @@ app.get('/get-current-user', verifyToken, async (req, res) => {
     res.status(500).json({ message: 'An error occurred while getting the current user ID' });
   }
 });
-// Route to submit a review
+
+
 app.post('/submit-review', verifyToken, async (req, res) => {
   const userId = req.userId;
-  const { reviewType, name, rating, comment, location, address, postalCode, city, state, country } = req.body;
+  const {
+    reviewType, name, rating, comment, location,
+    address, postalCode, city, state, country, latitude, longitude
+  } = req.body;
 
   try {
-    // Check if the business/item exists
     let table = reviewType === 'business' ? 'businesses' : 'items';
     let checkQuery = `SELECT id FROM ${table} WHERE name = ?`;
     let checkResult = await executeQuery(checkQuery, [name]);
 
     let itemId;
     if (checkResult.length > 0) {
-      // Business/item exists
       itemId = checkResult[0].id;
     } else {
-      // Create new business/item
       let insertQuery = `INSERT INTO ${table} (name) VALUES (?)`;
       let insertResult = await executeQuery(insertQuery, [name]);
       itemId = insertResult.insertId;
     }
 
-    // Check if the location already exists
     let locationId;
     if (location) {
-      let locationQuery = 'SELECT id FROM addresses WHERE address = ? AND postalCode = ? AND city = ? AND state = ? AND country = ?';
-      let locationResult = await executeQuery(locationQuery, [address, postalCode, city, state, country]);
+      let locationQuery = 'SELECT id FROM addresses WHERE address = ?';
+      let locationResult = await executeQuery(locationQuery, [address]);
 
       if (locationResult.length > 0) {
-        // Location with the same details exists
         locationId = locationResult[0].id;
       } else {
-        // Create a new location
-        let locationInsertQuery = 'INSERT INTO addresses (address, postalCode, city, state, country) VALUES (?, ?, ?, ?, ?)';
-        let locationInsertResult = await executeQuery(locationInsertQuery, [address, postalCode, city, state, country]);
+        let locationInsertQuery = 'INSERT INTO addresses (address, postalCode, city, state, country, latitude, longitude) VALUES (?, ?, ?, ?, ?, ?, ?)';
+        let locationInsertResult = await executeQuery(locationInsertQuery, [address, postalCode, city, state, country, latitude, longitude]);
         locationId = locationInsertResult.insertId;
       }
     }
 
-    // Insert the review
     let reviewQuery = 'INSERT INTO reviews (user_id, reviewable_id, reviewable_type, rating, comment, location_id) VALUES (?, ?, ?, ?, ?, ?)';
     await executeQuery(reviewQuery, [userId, itemId, reviewType, rating, comment, locationId]);
 
@@ -380,25 +377,34 @@ app.get('/reviews', async (req, res) => {
 });
 
 
-// Route to fetch existing locations based on the entered name
 app.get('/reviews/existing-locations', async (req, res) => {
   try {
-    const name = req.query.name || ''; // Get the entered name from the query parameter
+    const category = req.query.category || ''; // Get the selected category
 
-    const query = `
+    let query = `
       SELECT DISTINCT
-        a.address
+        a.id,
+        a.address,
+        a.latitude,
+        a.longitude,
+        AVG(r.rating) AS average_rating,
+        COUNT(r.id) AS review_count
       FROM addresses a
-      WHERE a.address LIKE ?;`;
+      LEFT JOIN reviews r ON a.id = r.location_id AND (r.reviewable_type = ? OR ? = '')
+      GROUP BY a.id, a.address, a.latitude, a.longitude;`;
 
-    const locations = await executeQuery(query, [`%${name}%`]);
-    res.json(locations.map(location => location.address));
+    const params = category ? [category, category] : ['', ''];
+
+    const locations = await executeQuery(query, params);
+
+    console.log('Locations fetched successfully:', locations); // Add this line for debugging
+
+    res.json(locations);
   } catch (err) {
-    console.error(err);
+    console.error('Error fetching existing locations:', err); // Add this line for debugging
     res.status(500).json({ message: 'An error occurred while fetching existing locations.' });
   }
 });
-
 
 
 app.put('/update-profile', verifyToken, async (req, res) => {
