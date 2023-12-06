@@ -10,10 +10,10 @@ Future<void> logoutUser(BuildContext buildContext, AuthProvider authProvider) as
 
     final client = HttpClient(context: secContext)
       ..badCertificateCallback = (X509Certificate cert, String host, int port) {
-        return host == '10.0.0.201';
+        return host == '192.168.1.253';
       };
 
-    final request = await client.postUrl(Uri.parse('https://10.0.0.201:5050/logout'));
+    final request = await client.postUrl(Uri.parse('https://192.168.1.253:5050/logout'));
     request.headers.contentType = ContentType.json;
     request.headers.add('Authorization', 'Bearer ${authProvider.token}');
 

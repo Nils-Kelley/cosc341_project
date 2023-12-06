@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:http/io_client.dart';
 
 class ApiService {
-  static const String baseUrl = 'https://10.0.0.201:5050';
+  static const String baseUrl = 'https://192.168.1.253:5050';
 
   // Create a custom http client
   http.Client createHttpClient() {

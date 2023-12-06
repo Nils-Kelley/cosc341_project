@@ -6,6 +6,7 @@ import 'package:http/io_client.dart';
 import 'dart:io';
 import 'auth_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:geocoding/geocoding.dart';
 
 class ReviewsPage extends StatefulWidget {
   final String reviewType;
@@ -50,7 +51,7 @@ class _ReviewsPageState extends State<ReviewsPage> {
   }
 
   Future<void> _fetchExistingLocations(String name) async {
-    final apiUrl = 'https://10.0.0.201:5050/reviews/existing-locations?name=$name';
+    final apiUrl = 'https://192.168.1.253:5050/reviews/existing-locations?name=$name';
 
     try {
       final response = await http.get(Uri.parse(apiUrl));
@@ -72,8 +73,8 @@ class _ReviewsPageState extends State<ReviewsPage> {
   }
 
   Future<void> _submitReview(BuildContext context) async {
-    final String apiUrl = 'https://10.0.0.201:5050/submit-review';
-    final AuthProvider authProvider = Provider.of<AuthProvider>(context, listen: false); // Use the same instance of AuthProvider
+    final String apiUrl = 'https://192.168.1.253:5050/submit-review';
+    final AuthProvider authProvider = Provider.of<AuthProvider>(context, listen: false);
 
     try {
       final customClient = createHttpClient();
@@ -81,7 +82,6 @@ class _ReviewsPageState extends State<ReviewsPage> {
       request.headers['Content-Type'] = 'application/json';
 
       final String? token = authProvider.token;
-
       if (token != null) {
         request.headers['Authorization'] = 'Bearer $token';
       }
@@ -95,36 +95,34 @@ class _ReviewsPageState extends State<ReviewsPage> {
       };
 
       if (_showAdditionalFields) {
-        reviewData['address'] = _addressController.text;
-        reviewData['postalCode'] = _postalCodeController.text;
-        reviewData['city'] = _cityController.text;
-        reviewData['state'] = _stateController.text;
-        reviewData['country'] = _countryController.text;
+        List<Location> locations = await locationFromAddress(
+            '${_addressController.text}, ${_cityController.text}, ${_stateController.text}, ${_postalCodeController.text}, ${_countryController.text}'
+        );
+        double latitude = locations.first.latitude;
+        double longitude = locations.first.longitude;
+
+        reviewData.addAll({
+          'address': _addressController.text,
+          'postalCode': _postalCodeController.text,
+          'city': _cityController.text,
+          'state': _stateController.text,
+          'country': _countryController.text,
+          'latitude': latitude,
+          'longitude': longitude
+        });
       }
 
       request.body = jsonEncode(reviewData);
       final response = await customClient.send(request);
       final responseBody = await response.stream.bytesToString();
 
-      print('Response Status Code: ${response.statusCode}');
-      print('Response Body: $responseBody');
-
       if (response.statusCode == 200) {
-        print('Review submitted successfully');
-        // Show a success message to the user
-
-        // Navigate back to the previous screen
-        Navigator.pop(context);
+        Navigator.pop(context); // Navigate back on success
       } else {
-        print('Failed to submit review');
-        // Handle submission failure and show an error message to the user
-
-
+        // Handle failure case
       }
     } catch (e) {
-      print('An error occurred: $e');
-      // Handle exceptions and show an error message to the user
-
+      // Handle exceptions
     }
   }
 

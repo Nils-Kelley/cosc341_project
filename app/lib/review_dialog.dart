@@ -29,8 +29,7 @@ class ReviewDialog extends StatelessWidget {
           _reviewButton(context, 'Leave a Review for a Business', Icons.business, Colors.lightBlue, 'business'), // Updated
           SizedBox(height: 12),
           _reviewButton(context, 'Leave a Review for a Restaurant', Icons.restaurant, Colors.lightBlue[200]!, 'restaurant'), // Updated
-          SizedBox(height: 12),
-          _reviewButton(context, 'Leave a Review for an Item', Icons.shopping_cart, Colors.lightBlue[300]!, 'item'), // Updated
+
         ],
       ),
       actions: [

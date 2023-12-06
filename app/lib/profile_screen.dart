@@ -31,22 +31,7 @@ class ProfileScreen extends StatelessWidget {
                   color: Colors.grey,
                 ),
               ),
-              SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () {
-                  // Add functionality to edit profile
-                },
-                style: ElevatedButton.styleFrom(
-                  primary: Colors.blue, // Set your desired button color
-                ),
-                child: Text(
-                  'Edit Profile',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                  ),
-                ),
-              ),
+
               SizedBox(height: 20),
               ListTile(
                 title: Text(
@@ -61,21 +46,7 @@ class ProfileScreen extends StatelessWidget {
                   // Add functionality to navigate to user's reviews
                 },
               ),
-              Divider(),
-              ListTile(
-                title: Text(
-                  'Settings',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                trailing: Icon(Icons.arrow_forward_ios),
-                onTap: () {
-                  // Add functionality to navigate to settings page
-                },
-              ),
-              Divider(),
+
               // Add more options as needed
             ],
           ),

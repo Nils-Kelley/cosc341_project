@@ -25,7 +25,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this); // Initialize TabController
+    _tabController = TabController(length: 2, vsync: this); // Initialize TabController
     _fetchReviews('business'); // Fetch initial reviews for the 'Business' tab
   }
 
@@ -36,7 +36,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   }
 
   Future<void> _fetchReviews(String reviewType) async {
-    final String apiUrl = 'https://10.0.0.201:5050/reviews?type=$reviewType'; // Include selected tab in the URL
+    final String apiUrl = 'https://192.168.1.253:5050/reviews?type=$reviewType'; // Include selected tab in the URL
     final client = HttpClient()
       ..badCertificateCallback = (X509Certificate cert, String host, int port) => true;
 
@@ -84,16 +84,12 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   case 1:
                     _fetchReviews('restaurant');
                     break;
-                  case 2:
-                    _fetchReviews('items');
-                    break;
                 }
               });
             },
             tabs: [
               Tab(text: 'Business'),
               Tab(text: 'Restaurant'),
-              Tab(text: 'Items'),
             ],
           ),
         ),
@@ -102,7 +98,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           children: [
             _buildReviewsTab('business'),
             _buildReviewsTab('restaurant'),
-            _buildReviewsTab('items'),
           ],
         ),
       ),
