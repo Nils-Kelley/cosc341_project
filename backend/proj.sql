@@ -106,7 +106,7 @@ CREATE TABLE IF NOT EXISTS restaurants (
   FOREIGN KEY (address_id) REFERENCES addresses (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Reviews table with polymorphic association
+-- Reviews table with polymorphic association and 'location_id' column
 CREATE TABLE IF NOT EXISTS reviews (
   id INT AUTO_INCREMENT PRIMARY KEY,
   user_id INT,
@@ -114,6 +114,8 @@ CREATE TABLE IF NOT EXISTS reviews (
   reviewable_type VARCHAR(50),
   rating DECIMAL(2, 1) NOT NULL,
   comment TEXT,
+  location_id INT, -- Added 'location_id' column
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+  FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+  FOREIGN KEY (location_id) REFERENCES addresses (id) -- Define a foreign key relationship with the 'addresses' table
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

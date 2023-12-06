@@ -47,13 +47,6 @@ app.use(
   })
 );
 
-// CORS configuration
-app.use(cors({
-  origin: 'http://localhost:3000', // Allow requests from the React app
-  methods: 'GET,POST,PUT,DELETE',
-  credentials: true // Allow cookies/session to be sent
-}));
-
 // Storage and Multer setup
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -281,11 +274,10 @@ app.get('/get-current-user', verifyToken, async (req, res) => {
     res.status(500).json({ message: 'An error occurred while getting the current user ID' });
   }
 });
-
 // Route to submit a review
 app.post('/submit-review', verifyToken, async (req, res) => {
   const userId = req.userId;
-  const { reviewType, name, rating, comment } = req.body;
+  const { reviewType, name, rating, comment, location, address, postalCode, city, state, country } = req.body;
 
   try {
     // Check if the business/item exists
@@ -304,9 +296,26 @@ app.post('/submit-review', verifyToken, async (req, res) => {
       itemId = insertResult.insertId;
     }
 
+    // Check if the location already exists
+    let locationId;
+    if (location) {
+      let locationQuery = 'SELECT id FROM addresses WHERE address = ? AND postalCode = ? AND city = ? AND state = ? AND country = ?';
+      let locationResult = await executeQuery(locationQuery, [address, postalCode, city, state, country]);
+
+      if (locationResult.length > 0) {
+        // Location with the same details exists
+        locationId = locationResult[0].id;
+      } else {
+        // Create a new location
+        let locationInsertQuery = 'INSERT INTO addresses (address, postalCode, city, state, country) VALUES (?, ?, ?, ?, ?)';
+        let locationInsertResult = await executeQuery(locationInsertQuery, [address, postalCode, city, state, country]);
+        locationId = locationInsertResult.insertId;
+      }
+    }
+
     // Insert the review
-    let reviewQuery = 'INSERT INTO reviews (user_id, reviewable_id, reviewable_type, rating, comment) VALUES (?, ?, ?, ?, ?)';
-    await executeQuery(reviewQuery, [userId, itemId, reviewType, rating, comment]);
+    let reviewQuery = 'INSERT INTO reviews (user_id, reviewable_id, reviewable_type, rating, comment, location_id) VALUES (?, ?, ?, ?, ?, ?)';
+    await executeQuery(reviewQuery, [userId, itemId, reviewType, rating, comment, locationId]);
 
     res.status(200).json({ message: 'Review submitted successfully' });
   } catch (err) {
@@ -314,6 +323,36 @@ app.post('/submit-review', verifyToken, async (req, res) => {
     res.status(500).json({ message: 'An error occurred while submitting the review.' });
   }
 });
+
+
+app.get('/reviews/locations', async (req, res) => {
+  try {
+    const query = `
+      SELECT
+        r.id as review_id,
+        r.reviewable_type,
+        r.rating,
+        r.comment,
+        COALESCE(b.name, i.name, rest.name) as name,
+        COALESCE(a.latitude, a_rest.latitude, a_item.latitude) as latitude,
+        COALESCE(a.longitude, a_rest.longitude, a_item.longitude) as longitude
+      FROM reviews r
+      LEFT JOIN businesses b ON r.reviewable_id = b.id AND r.reviewable_type = 'business'
+      LEFT JOIN addresses a ON b.address_id = a.id
+      LEFT JOIN restaurants rest ON r.reviewable_id = rest.id AND r.reviewable_type = 'restaurant'
+      LEFT JOIN addresses a_rest ON rest.address_id = a_rest.id
+      LEFT JOIN items i ON r.reviewable_id = i.id AND r.reviewable_type = 'item'
+      LEFT JOIN addresses a_item ON i.address_id = a_item.id
+    `;
+
+    const reviewsWithLocations = await executeQuery(query);
+    res.json(reviewsWithLocations);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'An error occurred while fetching reviews with locations.' });
+  }
+});
+
 
 app.get('/reviews', async (req, res) => {
   try {
@@ -337,6 +376,26 @@ app.get('/reviews', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'An error occurred while fetching reviews.' });
+  }
+});
+
+
+// Route to fetch existing locations based on the entered name
+app.get('/reviews/existing-locations', async (req, res) => {
+  try {
+    const name = req.query.name || ''; // Get the entered name from the query parameter
+
+    const query = `
+      SELECT DISTINCT
+        a.address
+      FROM addresses a
+      WHERE a.address LIKE ?;`;
+
+    const locations = await executeQuery(query, [`%${name}%`]);
+    res.json(locations.map(location => location.address));
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'An error occurred while fetching existing locations.' });
   }
 });
 
