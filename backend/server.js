@@ -297,33 +297,47 @@ app.post('/submit-review', verifyToken, async (req, res) => {
   } = req.body;
 
   try {
-    let table = reviewType === 'business' ? 'businesses' : 'items';
-    let checkQuery = `SELECT id FROM ${table} WHERE name = ?`;
+    let table, checkQuery, insertQuery;
+    // Determine the table based on the reviewType
+    if (reviewType === 'business') {
+      table = 'businesses';
+    } else if (reviewType === 'restaurant') {
+      table = 'restaurants';
+    } else {
+      table = 'items'; // Default case, can also add error handling for unknown types
+    }
+
+    // Check if the business/restaurant/item already exists
+    checkQuery = `SELECT id FROM ${table} WHERE name = ?`;
     let checkResult = await executeQuery(checkQuery, [name]);
 
     let itemId;
     if (checkResult.length > 0) {
-      itemId = checkResult[0].id;
+      itemId = checkResult[0].id; // Use existing id
     } else {
-      let insertQuery = `INSERT INTO ${table} (name) VALUES (?)`;
+      // Insert new business/restaurant/item
+      insertQuery = `INSERT INTO ${table} (name) VALUES (?)`;
       let insertResult = await executeQuery(insertQuery, [name]);
-      itemId = insertResult.insertId;
+      itemId = insertResult.insertId; // Use new id
     }
 
     let locationId;
     if (location) {
+      // Check if the location already exists
       let locationQuery = 'SELECT id FROM addresses WHERE address = ?';
       let locationResult = await executeQuery(locationQuery, [address]);
 
       if (locationResult.length > 0) {
-        locationId = locationResult[0].id;
+        locationId = locationResult[0].id; // Use existing location id
       } else {
+        // Insert new location
         let locationInsertQuery = 'INSERT INTO addresses (address, postalCode, city, state, country, latitude, longitude) VALUES (?, ?, ?, ?, ?, ?, ?)';
         let locationInsertResult = await executeQuery(locationInsertQuery, [address, postalCode, city, state, country, latitude, longitude]);
-        locationId = locationInsertResult.insertId;
+        locationId = locationInsertResult.insertId; // Use new location id
       }
     }
 
+    // Insert the review
     let reviewQuery = 'INSERT INTO reviews (user_id, reviewable_id, reviewable_type, rating, comment, location_id) VALUES (?, ?, ?, ?, ?, ?)';
     await executeQuery(reviewQuery, [userId, itemId, reviewType, rating, comment, locationId]);
 
@@ -333,6 +347,8 @@ app.post('/submit-review', verifyToken, async (req, res) => {
     res.status(500).json({ message: 'An error occurred while submitting the review.' });
   }
 });
+
+
 app.get('/reviews/locations/:category', async (req, res) => {
   const category = req.params.category;
   console.log(`Received category: ${category}`); // Log the received category
@@ -344,13 +360,16 @@ app.get('/reviews/locations/:category', async (req, res) => {
         r.reviewable_type,
         r.rating,
         r.comment,
-        COALESCE(b.name, rest.name) as name,
-        COALESCE(a.latitude, a_rest.latitude) as latitude,
-        COALESCE(a.longitude, a_rest.longitude) as longitude
+        a.latitude,
+        a.longitude,
+        CASE
+          WHEN r.reviewable_type = 'business' THEN b.name
+          WHEN r.reviewable_type = 'restaurant' THEN rest.name
+          ELSE NULL
+        END as name
       FROM reviews r
       LEFT JOIN addresses a ON r.location_id = a.id
       LEFT JOIN businesses b ON r.reviewable_id = b.id AND r.reviewable_type = 'business'
-      LEFT JOIN addresses a_rest ON r.location_id = a_rest.id
       LEFT JOIN restaurants rest ON r.reviewable_id = rest.id AND r.reviewable_type = 'restaurant'
     `;
 
@@ -371,6 +390,7 @@ app.get('/reviews/locations/:category', async (req, res) => {
     res.status(500).json({ message: 'An error occurred while fetching reviews with locations.' });
   }
 });
+
 
 
 app.get('/reviews', async (req, res) => {
