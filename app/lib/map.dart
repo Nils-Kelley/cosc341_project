@@ -45,7 +45,7 @@ class _MapScreenState extends State<MapScreen> {
       _goToCurrentLocation();
     } catch (e) {
       print(e);
-      _updateCircle(); // Update circle with default location
+      _updateCircle(); // Update circle with the default location
     }
   }
 
@@ -61,7 +61,6 @@ class _MapScreenState extends State<MapScreen> {
     ));
   }
 
-
   Future<void> _goToCurrentLocation() async {
     final GoogleMapController controller = await _controller.future;
     controller.animateCamera(CameraUpdate.newCameraPosition(
@@ -72,63 +71,52 @@ class _MapScreenState extends State<MapScreen> {
     ));
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: false, // Remove the back button
-        actions: <Widget>[
-          _buildCategoryButton('Businesses'),
-          _buildCategoryButton('Restaurants'),
-        ],
-        elevation: 0, // Remove the app bar's shadow
-        backgroundColor: Colors.white, // Customize the background color
-      ),
-      body: GoogleMap(
-        mapType: MapType.normal,
-        initialCameraPosition: CameraPosition(
-          target: _currentLocation,
-          zoom: 11.0,
-        ),
-        onMapCreated: (GoogleMapController controller) {
-          _controller.complete(controller);
-          _loadMarkersByCategory(_selectedCategory); // Load markers initially
-        },
-        markers: _markers,
-      ),
-    );
-  }
-
   Widget _buildCategoryButton(String category) {
+    bool isSelected = _selectedCategory == category;
+
     return Expanded(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8.0),
-        child: FractionallySizedBox(
-          widthFactor: 1.0,
-          child: ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              primary: _selectedCategory == category
-                  ? Colors.blue
-                  : Colors.grey.withOpacity(0.3), // Adjust opacity
-              onPrimary: Colors.white,
-              shape: RoundedRectangleBorder(
+        child: ElevatedButton(
+          style: ButtonStyle(
+            backgroundColor: MaterialStateProperty.all<Color>(
+              isSelected ? Colors.white : Colors.blue,
+            ),
+            elevation: MaterialStateProperty.all<double>(0.0),
+            shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+              RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(30),
+                side: BorderSide(
+                  color: Colors.blue,
+                  width: 2.0,
+                ),
               ),
             ),
-            onPressed: () => setState(() {
-              _selectedCategory = category.toLowerCase();
-              print('Button Press - Selected Category: $_selectedCategory'); // Debugging
-              _loadMarkersByCategory(_selectedCategory); // Load markers when category is changed
-            }),
-            child: Text(
-              category,
-              style: TextStyle(fontSize: 16), // Set the font size here
+          ),
+          onPressed: () => setState(() {
+            _selectedCategory = category.toLowerCase();
+            print('Button Press - Selected Category: $_selectedCategory');
+            _loadMarkersByCategory(_selectedCategory);
+          }),
+          child: RichText(
+            text: TextSpan(
+              text: category,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: isSelected ? Colors.blue : Colors.white,
+                decoration: isSelected ? TextDecoration.underline : TextDecoration.none,
+              ),
             ),
           ),
         ),
       ),
     );
   }
+
+
+
+
 
   Future<void> _loadMarkersByCategory(String? category) async {
     _markers.clear(); // Clear existing markers
@@ -159,15 +147,16 @@ class _MapScreenState extends State<MapScreen> {
 
           final LatLng latLng = LatLng(latitude, longitude);
           final String name = location['name'] ?? 'Unknown'; // Fallback for 'name'
-          final double averageRating =
-              double.tryParse(location['average_rating'] ?? '0.0') ?? 0.0;
+          final double averageRating = location['rating'] != null
+              ? double.tryParse(location['rating'].toString()) ?? 0.0
+              : 0.0; // Parse rating and provide a fallback
 
           return Marker(
             markerId: MarkerId('marker_${location['review_id']}'),
             position: latLng,
             infoWindow: InfoWindow(
-              title: name,
-              snippet: 'Average Rating: $averageRating',
+              title: name != 'Unknown' ? name : 'Rating: $averageRating', // Display name if available, otherwise show rating
+              snippet: name != 'Unknown' ? 'Rating: $averageRating' : null, // Show rating snippet if name is available
             ),
           );
         }).whereType<Marker>().toSet(); // Filter out null markers
@@ -186,12 +175,37 @@ class _MapScreenState extends State<MapScreen> {
     }
   }
 
-
-
   // Create a custom http client
   http.Client createHttpClient() {
     final ioClient = HttpClient()
       ..badCertificateCallback = (X509Certificate cert, String host, int port) => true; // Bypass handshake error
     return IOClient(ioClient);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        automaticallyImplyLeading: false, // Remove the back button
+        actions: <Widget>[
+          _buildCategoryButton('Businesses'),
+          _buildCategoryButton('Restaurants'),
+        ],
+        elevation: 0, // Remove the app bar's shadow
+        backgroundColor: Colors.blue, // Set background color to blue
+      ),
+      body: GoogleMap(
+        mapType: MapType.normal,
+        initialCameraPosition: CameraPosition(
+          target: _currentLocation,
+          zoom: 11.0,
+        ),
+        onMapCreated: (GoogleMapController controller) {
+          _controller.complete(controller);
+          _loadMarkersByCategory(_selectedCategory); // Load markers initially
+        },
+        markers: _markers,
+      ),
+    );
   }
 }
