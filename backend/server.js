@@ -363,31 +363,34 @@ app.get('/reviews/locations', async (req, res) => {
   }
 });
 
-
 app.get('/reviews', async (req, res) => {
   try {
-    const reviewableType = req.query.type || 'business'; // Default to 'business' if not specified
+    const reviewableType = req.query.type; // Get the type from query parameter
+
+    // Dynamic table name based on reviewableType
+    const tableName = reviewableType === 'restaurant' ? 'restaurants' : 'businesses';
 
     const query = `
       SELECT
         b.name AS name,
         AVG(r.rating) AS averageRating
       FROM reviews r
-      LEFT JOIN businesses b ON r.reviewable_id = b.id AND r.reviewable_type = 'business'
-      WHERE r.reviewable_type = 'business'
+      LEFT JOIN ${tableName} b ON r.reviewable_id = b.id AND r.reviewable_type = ?
+      WHERE r.reviewable_type = ?
       GROUP BY r.reviewable_id
     `;
 
-    const reviews = await executeQuery(query, [reviewableType]);
+    const reviews = await executeQuery(query, [reviewableType, reviewableType]);
     res.json(reviews.map(review => ({
       name: review.name,
-      rating: parseFloat(parseFloat(review.averageRating).toFixed(1)) // Ensure averageRating is a float before rounding
+      rating: parseFloat(parseFloat(review.averageRating).toFixed(1))
     })));
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'An error occurred while fetching reviews.' });
   }
 });
+
 
 
 app.get('/reviews/existing-locations', async (req, res) => {
