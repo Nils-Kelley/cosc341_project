@@ -275,6 +275,19 @@ app.get('/get-current-user', verifyToken, async (req, res) => {
   }
 });
 
+app.get('/reviews/user/:userId', async (req, res) => {
+  const userId = req.params.userId;
+
+  try {
+    const query = 'SELECT * FROM reviews WHERE user_id = ?';
+    const userReviews = await executeQuery(query, [userId]);
+    res.json(userReviews);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'An error occurred while fetching user reviews.' });
+  }
+});
+
 
 app.post('/submit-review', verifyToken, async (req, res) => {
   const userId = req.userId;
