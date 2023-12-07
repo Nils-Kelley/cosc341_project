@@ -116,7 +116,7 @@ class _MapScreenState extends State<MapScreen> {
               ),
             ),
             onPressed: () => setState(() {
-              _selectedCategory = category;
+              _selectedCategory = category.toLowerCase();
               print('Button Press - Selected Category: $_selectedCategory'); // Debugging
               _loadMarkersByCategory(_selectedCategory); // Load markers when category is changed
             }),
@@ -132,21 +132,28 @@ class _MapScreenState extends State<MapScreen> {
 
 
   Future<void> _loadMarkersByCategory(String? category) async {
+    _markers.clear(); // Clear existing markers
+    if (category == null) {
+      return; // If no category is selected, do not load any markers
+    }
+
     try {
       final client = createHttpClient();
-      String apiUrl = 'https://10.0.0.201:5050/reviews/existing-locations?category=$category';
+      String apiUrl = 'https://10.0.0.201:5050/reviews/locations/$category';
       print('API Request URL: $apiUrl');
       final response = await client.get(Uri.parse(apiUrl));
 
       if (response.statusCode == 200) {
         final List<dynamic> locations = json.decode(response.body);
+        print('Received locations: $locations');
 
         final Set<Marker> newMarkers = locations.map<Marker>((location) {
-          final double latitude = double.parse(location['latitude'] ?? '0.0');
-          final double longitude = double.parse(location['longitude'] ?? '0.0');
+          final double latitude = double.tryParse(location['latitude'] ?? '0.0') ?? 0.0;
+          final double longitude = double.tryParse(location['longitude'] ?? '0.0') ?? 0.0;
           final LatLng latLng = LatLng(latitude, longitude);
-          final String name = location['address'];
-          final double averageRating = double.parse(location['average_rating'] ?? '0.0');
+          final String name = location['name'] ?? ''; // Provide a default value for 'name'
+          final double averageRating =
+              double.tryParse(location['average_rating'] ?? '0.0') ?? 0.0;
 
           return Marker(
             markerId: MarkerId(name),
