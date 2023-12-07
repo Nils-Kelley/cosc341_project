@@ -36,7 +36,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   }
 
   Future<void> _fetchReviews(String reviewType) async {
-    final String apiUrl = 'https://192.168.1.253:5050/reviews?type=$reviewType'; // Include selected tab in the URL
+    final String apiUrl = 'https://10.0.0.201:5050/reviews?type=$reviewType'; // Include selected tab in the URL
     final client = HttpClient()
       ..badCertificateCallback = (X509Certificate cert, String host, int port) => true;
 

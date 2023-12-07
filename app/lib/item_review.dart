@@ -11,7 +11,7 @@ class ItemReviewScreen extends StatelessWidget {
 
   Future<List<dynamic>> fetchReviews(String userId) async {
     final client = createHttpClient();
-    final uri = Uri.parse('https://192.168.1.253:5050/reviews/user/$userId');
+    final uri = Uri.parse('https://10.0.0.201:5050/reviews/user/$userId');
 
     try {
       final response = await client.get(uri);

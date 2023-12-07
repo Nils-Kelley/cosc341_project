@@ -134,7 +134,7 @@ class _MapScreenState extends State<MapScreen> {
   Future<void> _loadMarkersByCategory(String? category) async {
     try {
       final client = createHttpClient();
-      String apiUrl = 'https://192.168.1.253:5050/reviews/existing-locations?category=$category';
+      String apiUrl = 'https://10.0.0.201:5050/reviews/existing-locations?category=$category';
       print('API Request URL: $apiUrl');
       final response = await client.get(Uri.parse(apiUrl));
 

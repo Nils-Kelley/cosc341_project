@@ -111,7 +111,8 @@ class _MyHomePageState extends State<MyHomePage> {
         child: _widgetOptions.elementAt(_selectedIndex),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      floatingActionButton: _buildReviewButton(), // Use a custom button
+      floatingActionButton: _buildReviewButton(),
+      // Use a custom button
       bottomNavigationBar: _buildBottomNavigationBar(),
     );
   }
@@ -181,51 +182,68 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget _buildBottomNavigationBar() {
-    return BottomAppBar(
-      shape: CircularNotchedRectangle(),
-      notchMargin: 6.0,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: <Widget>[
-          IconButton(
-            icon: Icon(
-              Icons.home,
-              size: 30,
+    return Container(
+      height: 100,
+      color: Colors.blue, // Set the background color to blue
+// Set the desired height for the bottom navigation bar
+      child: BottomAppBar(
+        shape: CircularNotchedRectangle(),
+        notchMargin: 6.0,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: <Widget>[
+            _buildNavBarItem(
+              icon: Icons.home,
+              text: 'Home',
+              index: 0,
             ),
-            onPressed: () {
-              _onItemTapped(0);
-            },
+            _buildNavBarItem(
+              icon: Icons.star,
+              text: 'Favorites',
+              index: 1,
+            ),
+            SizedBox(width: 60), // Empty space for the FAB
+            _buildNavBarItem(
+              icon: Icons.map,
+              text: 'Map',
+              index: 2,
+            ),
+            _buildNavBarItem(
+              icon: Icons.person,
+              text: 'Profile',
+              index: 3,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNavBarItem(
+      {required IconData icon, required String text, required int index}) {
+    return IconButton(
+      icon: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            size: 30,
+            color: _selectedIndex == index ? Colors.blue : Colors
+                .grey, // Highlight the selected icon
           ),
-          IconButton(
-            icon: Icon(
-              Icons.star,
-              size: 30,
+          Text(
+            text,
+            style: TextStyle(
+              fontSize: 15,
+              color: _selectedIndex == index ? Colors.blue : Colors
+                  .grey, // Highlight the selected text
             ),
-            onPressed: () {
-              _onItemTapped(1);
-            },
-          ),
-          SizedBox(width: 60), // Empty space for the FAB
-          IconButton(
-            icon: Icon(
-              Icons.map,
-              size: 30,
-            ),
-            onPressed: () {
-              _onItemTapped(2);
-            },
-          ),
-          IconButton(
-            icon: Icon(
-              Icons.person,
-              size: 30,
-            ),
-            onPressed: () {
-              _onItemTapped(3);
-            },
           ),
         ],
       ),
+      onPressed: () {
+        _onItemTapped(index);
+      },
     );
   }
 }

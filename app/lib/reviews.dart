@@ -51,7 +51,7 @@ class _ReviewsPageState extends State<ReviewsPage> {
   }
 
   Future<void> _fetchExistingLocations(String name) async {
-    final apiUrl = 'https://192.168.1.253:5050/reviews/existing-locations?name=$name';
+    final apiUrl = 'https://10.0.0.201:5050/reviews/existing-locations?name=$name';
 
     try {
       final response = await http.get(Uri.parse(apiUrl));
@@ -73,7 +73,7 @@ class _ReviewsPageState extends State<ReviewsPage> {
   }
 
   Future<void> _submitReview(BuildContext context) async {
-    final String apiUrl = 'https://192.168.1.253:5050/submit-review';
+    final String apiUrl = 'https://10.0.0.201:5050/submit-review';
     final AuthProvider authProvider = Provider.of<AuthProvider>(context, listen: false);
 
     try {
