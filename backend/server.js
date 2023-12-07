@@ -349,6 +349,42 @@ app.post('/submit-review', verifyToken, async (req, res) => {
 });
 
 
+app.get('/trending', async (req, res) => {
+    try {
+        let query = `
+            SELECT
+                r.reviewable_id,
+                r.reviewable_type,
+                AVG(r.rating) as avg_rating,
+                a.latitude,
+                a.longitude,
+                CASE
+                    WHEN r.reviewable_type = 'business' THEN b.name
+                    WHEN r.reviewable_type = 'restaurant' THEN rest.name
+                    ELSE NULL
+                END as name
+            FROM reviews r
+            LEFT JOIN addresses a ON r.location_id = a.id
+            LEFT JOIN businesses b ON r.reviewable_id = b.id AND r.reviewable_type = 'business'
+            LEFT JOIN restaurants rest ON r.reviewable_id = rest.id AND r.reviewable_type = 'restaurant'
+            GROUP BY r.reviewable_id, r.reviewable_type, a.latitude, a.longitude, b.name, rest.name
+            HAVING AVG(r.rating) = 5
+        `;
+
+        console.log(`Executing query: ${query}`); // Log the SQL query
+
+        const results = await executeQuery(query); // Use executeQuery instead of db.query
+        console.log(`Query results: ${JSON.stringify(results)}`); // Log query results
+
+        res.json(results);
+    } catch (err) {
+        console.error(`Error during query execution: ${err}`);
+        res.status(500).send('Server error');
+    }
+});
+
+
+
 app.get('/reviews/locations/:category', async (req, res) => {
   const category = req.params.category;
   console.log(`Received category: ${category}`); // Log the received category
@@ -450,6 +486,41 @@ app.get('/reviews/existing-locations', async (req, res) => {
     console.error('Error fetching existing locations:', err); // Add this line for debugging
     res.status(500).json({ message: 'An error occurred while fetching existing locations.' });
   }
+});
+app.get('/reviews/:name', async (req, res) => {
+    const name = req.params.name;
+    console.log(`Received request for reviews of: ${name}`); // Log the name received
+
+    try {
+        let query = `
+            SELECT
+                r.rating,
+                r.comment,
+                r.created_at,
+                (SELECT AVG(rating) FROM reviews WHERE reviewable_id = r.reviewable_id AND reviewable_type = r.reviewable_type) as avg_rating
+            FROM
+                reviews r
+            WHERE
+                r.reviewable_id IN (
+                    SELECT id FROM businesses WHERE name = ?
+                    UNION
+                    SELECT id FROM restaurants WHERE name = ?
+                )
+            AND
+                (r.reviewable_type = 'business' OR r.reviewable_type = 'restaurant');
+        `;
+
+        console.log("Executing query: ", query); // Log the query being executed
+        const results = await executeQuery(query, [name, name]);
+        console.log("Query executed successfully. Results: ", results); // Log the results of the query
+
+        res.json(results);
+    } catch (err) {
+        console.error(`Error during query execution: ${err}`); // Log detailed error
+        console.error(`Query that caused error: ${query}`); // Log the query that caused the error
+        console.error(`Parameters for the query: ${name}`); // Log parameters for the query
+        res.status(500).send('Server error');
+    }
 });
 
 
