@@ -21,9 +21,9 @@ class _ForYouPageState extends State<ForYouPage> {
       length: tabs.length,
       child: Scaffold(
         appBar: PreferredSize(
-          preferredSize: Size.fromHeight(100.0), // Reduced the height
+          preferredSize: Size.fromHeight(100.0),
           child: AppBar(
-            elevation: 0,
+            automaticallyImplyLeading: false, // Remove back button
             backgroundColor: Colors.white,
             title: TabBar(
               tabs: tabs,
@@ -33,7 +33,7 @@ class _ForYouPageState extends State<ForYouPage> {
                 });
               },
               indicator: BoxDecoration(
-                borderRadius: BorderRadius.circular(30),
+                borderRadius: BorderRadius.circular(20),
                 gradient: LinearGradient(
                   colors: [
                     Colors.blue.withOpacity(0.8),
@@ -60,7 +60,7 @@ class _ForYouPageState extends State<ForYouPage> {
           children: [
             // Trending Screen
             SingleChildScrollView(
-              padding: EdgeInsets.all(12), // Reduced padding
+              padding: EdgeInsets.all(12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -71,23 +71,30 @@ class _ForYouPageState extends State<ForYouPage> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  SizedBox(height: 8), // Reduced spacing
+                  SizedBox(height: 8),
                   RestaurantCard(
                     name: 'Restaurant 1',
                     rating: 4.5,
                     imageUrl: 'assets/1.png',
+                    onPressed: () {
+                      _showCardDetails('Restaurant 1', 4.5, 'assets/1.png');
+                    },
                   ),
                   RestaurantCard(
                     name: 'Restaurant 2',
                     rating: 4.2,
                     imageUrl: 'assets/2.png',
+                    onPressed: () {
+                      _showCardDetails('Restaurant 2', 4.2, 'assets/2.png');
+                    },
                   ),
+                  // Add more RestaurantCard widgets here
                 ],
               ),
             ),
             // Most Recent Screen
             SingleChildScrollView(
-              padding: EdgeInsets.all(12), // Reduced padding
+              padding: EdgeInsets.all(12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -98,18 +105,129 @@ class _ForYouPageState extends State<ForYouPage> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  SizedBox(height: 8), // Reduced spacing
+                  SizedBox(height: 8),
                   ReviewCard(
                     restaurantName: 'Restaurant 1',
                     userName: 'User 1',
                     rating: 4.5,
                     reviewText: 'Great food and service!',
+                    onPressed: () {
+                      _showCardDetails('Restaurant 1', 4.5, 'assets/1.png');
+                    },
                   ),
                   ReviewCard(
                     restaurantName: 'Restaurant 2',
                     userName: 'User 2',
                     rating: 4.2,
                     reviewText: 'Awesome experience!',
+                    onPressed: () {
+                      _showCardDetails('Restaurant 2', 4.2, 'assets/2.png');
+                    },
+                  ),
+                  // Add more ReviewCard widgets here
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showCardDetails(String name, double rating, String imageUrl) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return CardDetailsDialog(
+          name: name,
+          rating: rating,
+          imageUrl: imageUrl,
+          reviews: [
+            // Add static reviews here
+            Review(
+              userName: 'User 1',
+              rating: 4.5,
+              reviewText: 'Great place!',
+            ),
+            Review(
+              userName: 'User 2',
+              rating: 4.0,
+              reviewText: 'Nice ambiance!',
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class RestaurantCard extends StatelessWidget {
+  final String name;
+  final double rating;
+  final String imageUrl;
+  final VoidCallback onPressed;
+
+  const RestaurantCard({
+    required this.name,
+    required this.rating,
+    required this.imageUrl,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onPressed,
+      child: Card(
+        elevation: 4,
+        margin: EdgeInsets.only(bottom: 16),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12.0),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(12.0),
+                topRight: Radius.circular(12.0),
+              ),
+              child: Image.asset(
+                imageUrl,
+                width: double.infinity,
+                height: 150,
+                fit: BoxFit.cover,
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    name,
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.star,
+                        color: Colors.amber,
+                        size: 14,
+                      ),
+                      Text(
+                        ' $rating',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.amber,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -121,53 +239,131 @@ class _ForYouPageState extends State<ForYouPage> {
   }
 }
 
-class RestaurantCard extends StatelessWidget {
-  final String name;
+class ReviewCard extends StatelessWidget {
+  final String restaurantName;
+  final String userName;
   final double rating;
-  final String imageUrl;
+  final String reviewText;
+  final VoidCallback onPressed;
 
-  const RestaurantCard({
-    required this.name,
+  const ReviewCard({
+    required this.restaurantName,
+    required this.userName,
     required this.rating,
-    required this.imageUrl,
+    required this.reviewText,
+    required this.onPressed,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 4,
-      margin: EdgeInsets.only(bottom: 16), // Reduced spacing
+    return GestureDetector(
+      onTap: onPressed,
+      child: Card(
+        elevation: 4,
+        margin: EdgeInsets.only(bottom: 16),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12.0),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Review for $restaurantName',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.star,
+                        color: Colors.amber,
+                        size: 14,
+                      ),
+                      Text(
+                        ' $rating',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.amber,
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    'Description:',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                  Text(
+                    reviewText,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.black54,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class CardDetailsDialog extends StatelessWidget {
+  final String name;
+  final double rating;
+  final String imageUrl;
+  final List<Review> reviews;
+
+  CardDetailsDialog({
+    required this.name,
+    required this.rating,
+    required this.imageUrl,
+    required this.reviews,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12.0),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          ClipRRect(
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(12.0),
-              topRight: Radius.circular(12.0),
-            ),
-            child: Image.asset(
-              imageUrl,
-              width: double.infinity,
-              height: 150,
-              fit: BoxFit.cover,
-            ),
+          Image.asset(
+            imageUrl,
+            width: double.infinity,
+            height: 200,
+            fit: BoxFit.cover,
           ),
           Padding(
-            padding: EdgeInsets.all(12),
+            padding: const EdgeInsets.all(16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   name,
                   style: TextStyle(
-                    fontSize: 18,
+                    fontSize: 24,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                SizedBox(height: 4),
+                SizedBox(height: 8),
                 Row(
                   children: [
                     Icon(
@@ -185,6 +381,49 @@ class RestaurantCard extends StatelessWidget {
                     ),
                   ],
                 ),
+                SizedBox(height: 16),
+                Text(
+                  'Reviews:',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 8),
+                // Display static reviews here
+                for (Review review in reviews) ...[
+                  Text(
+                    'User: ${review.userName}',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.star,
+                        color: Colors.amber,
+                        size: 14,
+                      ),
+                      Text(
+                        ' ${review.rating}',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.amber,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Text(
+                    review.reviewText,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.black54,
+                    ),
+                  ),
+                  SizedBox(height: 8),
+                ],
               ],
             ),
           ),
@@ -194,80 +433,14 @@ class RestaurantCard extends StatelessWidget {
   }
 }
 
-class ReviewCard extends StatelessWidget {
-  final String restaurantName;
+class Review {
   final String userName;
   final double rating;
   final String reviewText;
 
-  const ReviewCard({
-    required this.restaurantName,
+  Review({
     required this.userName,
     required this.rating,
     required this.reviewText,
   });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      elevation: 4,
-      margin: EdgeInsets.only(bottom: 16), // Reduced spacing
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12.0),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Review for $restaurantName',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                SizedBox(height: 4),
-                Row(
-                  children: [
-                    Icon(
-                      Icons.star,
-                      color: Colors.amber,
-                      size: 14,
-                    ),
-                    Text(
-                      ' $rating',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.amber,
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 8), // Reduced spacing
-                Text(
-                  'Description:',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
-                Text(
-                  reviewText,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.black54,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }

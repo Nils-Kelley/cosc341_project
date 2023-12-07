@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'dart:io';
-
+import 'item_review.dart';
 class HomeScreen extends StatefulWidget {
   @override
   _HomeScreenState createState() => _HomeScreenState();
@@ -265,6 +265,26 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     color: Colors.black54,
                   ),
                 ),
+                SizedBox(height: 16),
+
+                // Centered and styled 'View Reviews' button
+                Center(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).push(MaterialPageRoute(
+                        builder: (context) => ItemReviewScreen(), // Navigate to ItemReviewScreen
+                      ));
+                    },
+                    child: Text('View Reviews', style: TextStyle(fontSize: 18)), // Larger font size
+                    style: ElevatedButton.styleFrom(
+                      primary: Colors.white, // Use your primary color here
+                      padding: EdgeInsets.symmetric(horizontal: 32, vertical: 12), // Larger padding
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8), // Rounded corners
+                      ),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
@@ -272,4 +292,5 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       },
     );
   }
+
 }

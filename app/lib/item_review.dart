@@ -6,8 +6,8 @@ import 'dart:io';
 import 'package:provider/provider.dart';
 import 'auth_provider.dart';
 
-class MyReviewsScreen extends StatelessWidget {
-  MyReviewsScreen({Key? key}) : super(key: key);
+class ItemReviewScreen extends StatelessWidget {
+  ItemReviewScreen();
 
   Future<List<dynamic>> fetchReviews(String userId) async {
     final client = createHttpClient();
