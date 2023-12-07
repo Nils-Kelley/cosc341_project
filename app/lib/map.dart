@@ -130,7 +130,6 @@ class _MapScreenState extends State<MapScreen> {
     );
   }
 
-
   Future<void> _loadMarkersByCategory(String? category) async {
     _markers.clear(); // Clear existing markers
     if (category == null) {
@@ -147,23 +146,31 @@ class _MapScreenState extends State<MapScreen> {
         final List<dynamic> locations = json.decode(response.body);
         print('Received locations: $locations');
 
-        final Set<Marker> newMarkers = locations.map<Marker>((location) {
-          final double latitude = double.tryParse(location['latitude'] ?? '0.0') ?? 0.0;
-          final double longitude = double.tryParse(location['longitude'] ?? '0.0') ?? 0.0;
+        final Set<Marker> newMarkers = locations.map<Marker?>((location) {
+          final double latitude = location['latitude'] != null
+              ? double.tryParse(location['latitude']) ?? 0.0
+              : 0.0;
+          final double longitude = location['longitude'] != null
+              ? double.tryParse(location['longitude']) ?? 0.0
+              : 0.0;
+
+          // Skip marker creation if coordinates are invalid
+          if (latitude == 0.0 || longitude == 0.0) return null;
+
           final LatLng latLng = LatLng(latitude, longitude);
-          final String name = location['name'] ?? ''; // Provide a default value for 'name'
+          final String name = location['name'] ?? 'Unknown'; // Fallback for 'name'
           final double averageRating =
               double.tryParse(location['average_rating'] ?? '0.0') ?? 0.0;
 
           return Marker(
-            markerId: MarkerId(name),
+            markerId: MarkerId('marker_${location['review_id']}'),
             position: latLng,
             infoWindow: InfoWindow(
               title: name,
               snippet: 'Average Rating: $averageRating',
             ),
           );
-        }).toSet();
+        }).whereType<Marker>().toSet(); // Filter out null markers
 
         setState(() {
           _markers = newMarkers;
@@ -178,6 +185,7 @@ class _MapScreenState extends State<MapScreen> {
       print('Error loading markers: $err');
     }
   }
+
 
 
   // Create a custom http client
