@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'item_review.dart';
+
 class HomeScreen extends StatefulWidget {
   @override
   _HomeScreenState createState() => _HomeScreenState();
@@ -18,9 +19,10 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   );
 
   late TabController _tabController; // Declare a TabController
-
   int _selectedTabIndex = 0; // Index of the selected tab
   List<dynamic> _reviews = [];
+  TextEditingController searchController = TextEditingController();
+  String searchQuery = '';
 
   @override
   void initState() {
@@ -93,11 +95,33 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             ],
           ),
         ),
-        body: TabBarView( // Add a TabBarView
-          controller: _tabController, // Assign TabController to the TabBarView
+        body: Column(
           children: [
-            _buildReviewsTab('business'),
-            _buildReviewsTab('restaurant'),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: TextField(
+                controller: searchController,
+                decoration: InputDecoration(
+                  labelText: 'Search',
+                  prefixIcon: Icon(Icons.search),
+                  border: OutlineInputBorder(),
+                ),
+                onChanged: (query) {
+                  setState(() {
+                    searchQuery = query;
+                  });
+                },
+              ),
+            ),
+            Expanded(
+              child: TabBarView( // Add a TabBarView
+                controller: _tabController, // Assign TabController to the TabBarView
+                children: [
+                  _buildReviewsTab('business'),
+                  _buildReviewsTab('restaurant'),
+                ],
+              ),
+            ),
           ],
         ),
       ),
@@ -105,11 +129,16 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   }
 
   Widget _buildReviewsTab(String reviewType) {
+    final filteredReviews = _reviews.where((review) {
+      final name = review['name']?.toString().toLowerCase() ?? '';
+      return name.contains(searchQuery.toLowerCase());
+    }).toList();
+
     return SingleChildScrollView(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          for (var review in _reviews)
+          for (var review in filteredReviews)
             _buildReviewCard(
               review['name'] ?? 'Unknown Business',
               (review['rating'] ?? 0.0).toDouble(),
@@ -292,5 +321,4 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       },
     );
   }
-
 }
