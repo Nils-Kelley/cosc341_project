@@ -35,8 +35,8 @@ class LoginScreen extends StatelessWidget {
               ),
               SizedBox(height: 30),
               _buildTextField(
-                labelText: 'Email',
-                hintText: 'Enter your email',
+                labelText: 'Username',
+                hintText: 'Enter your username',
                 icon: Icons.email,
                 controller: _emailController,
               ),

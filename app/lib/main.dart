@@ -200,7 +200,7 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             _buildNavBarItem(
               icon: Icons.star,
-              text: 'Favorites',
+              text: 'For You',
               index: 1,
             ),
             SizedBox(width: 60), // Empty space for the FAB

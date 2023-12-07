@@ -1,29 +1,64 @@
+import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 
-class ItemReviewScreen extends StatelessWidget {
+class ItemReviewScreen extends StatefulWidget {
+  final String companyName;
+
+  ItemReviewScreen({this.companyName = 'Test Company'});
+
+  @override
+  _ItemReviewScreenState createState() => _ItemReviewScreenState();
+}
+
+class _ItemReviewScreenState extends State<ItemReviewScreen> {
+  List<Map<String, dynamic>> reviews = []; // Changed to dynamic
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchreviews(widget.companyName);
+  }
+
+  Future<void> _fetchreviews(String name) async {
+    final String apiUrl = 'https://10.0.0.201:5050/reviews/$name';
+    final client = HttpClient()
+      ..badCertificateCallback = (X509Certificate cert, String host, int port) => true;
+
+    try {
+      final request = await client.getUrl(Uri.parse(apiUrl));
+      final response = await request.close();
+      final responseBody = await response.transform(utf8.decoder).join();
+
+      if (response.statusCode == 200) {
+        setState(() {
+          reviews = List<Map<String, dynamic>>.from(jsonDecode(responseBody));
+          print('Reviews successfully loaded and state updated');
+        });
+      } else {
+        print('Failed to load reviews. Status code: ${response.statusCode}');
+        throw Exception('Failed to load reviews');
+      }
+    } catch (e) {
+      print('An error occurred: $e');
+      throw Exception('Failed to load reviews');
+    } finally {
+      client.close();
+      print('HTTP client closed');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Mock reviews data with an average rating of 4.5
-    final List<Map<String, String>> reviews = [
-      {
-        'review': 'Always delicious.',
-        'rating': '3.5',
-        'date': '2023-12-08',
-      },
-
-    ];
-
-    // Calculate the average rating
     double averageRating = 0.0;
-    for (var review in reviews) {
-      averageRating += double.parse(review['rating']!);
+    if (reviews.isNotEmpty) {
+      averageRating = double.tryParse(reviews[0]['avg_rating'].toString()) ?? 0.0;
     }
-    averageRating /= reviews.length;
 
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'McDonald\'s Reviews',
+          widget.companyName + ' Reviews',
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
@@ -46,9 +81,9 @@ class ItemReviewScreen extends StatelessWidget {
               itemBuilder: (context, index) {
                 var review = reviews[index];
                 return ReviewCard(
-                  comment: review['review']!, // Updated 'comment' to 'review'
-                  rating: review['rating']!,
-                  date: review['date']!,
+                  comment: review['comment'] ?? '', // Handling null
+                  rating: review['rating'].toString(), // Handling different types
+                  date: review['created_at'].toString(), // Handling different types
                 );
               },
             ),
@@ -82,7 +117,7 @@ class ReviewCard extends StatelessWidget {
           children: [
             ListTile(
               leading: CircleAvatar(
-                backgroundImage: AssetImage('assets/profile.png'), // Add your profile image asset
+                backgroundImage: AssetImage('assets/profile.png'),
                 radius: 24,
               ),
               subtitle: Column(

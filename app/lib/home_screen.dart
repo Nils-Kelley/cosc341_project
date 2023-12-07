@@ -330,7 +330,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   child: ElevatedButton(
                     onPressed: () {
                       Navigator.of(context).push(MaterialPageRoute(
-                        builder: (context) => ItemReviewScreen(), // Navigate to ItemReviewScreen
+                        builder: (context) => ItemReviewScreen(companyName: businessName), // Navigate to ItemReviewScreen
                       ));
                     },
                     child: Text('View Reviews', style: TextStyle(fontSize: 18)), // Larger font size

@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
-
+import 'dart:convert';
+import 'dart:io';
+import 'item_review.dart';
 class ForYouPage extends StatefulWidget {
-  const ForYouPage({Key? key}) : super(key: key);
+  const ForYouPage({
+    Key? key,
+  }) : super(key: key);
 
   @override
   _ForYouPageState createState() => _ForYouPageState();
@@ -12,9 +16,43 @@ class _ForYouPageState extends State<ForYouPage> {
 
   final List<Tab> tabs = <Tab>[
     Tab(text: 'Trending'),
-    Tab(text: 'Best Reviews'),
   ];
+List<dynamic> _trending =[];
 
+  @override
+  void initState() {
+    super.initState();
+    _fetchTrending();
+  }
+
+
+  Future<void> _fetchTrending() async {
+    final String apiUrl = 'https://10.0.0.201:5050/trending'; // Replace with your actual backend URL
+    final client = HttpClient()
+      ..badCertificateCallback = (X509Certificate cert, String host, int port) => true;
+
+    try {
+      final request = await client.getUrl(Uri.parse(apiUrl));
+      final response = await request.close();
+      final responseBody = await response.transform(utf8.decoder).join();
+
+      if (response.statusCode == 200) {
+        setState(() {
+          _trending = jsonDecode(responseBody);
+        });
+      } else {
+        print('Failed to load reviews');
+        throw Exception('Failed to load reviews');
+      }
+    } catch (e) {
+      print('An error occurred: $e');
+      throw Exception('Failed to load reviews');
+    } finally {
+      client.close();
+    }
+  }
+
+  @override
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
@@ -23,7 +61,7 @@ class _ForYouPageState extends State<ForYouPage> {
         appBar: PreferredSize(
           preferredSize: Size.fromHeight(100.0),
           child: AppBar(
-            automaticallyImplyLeading: false, // Remove back button
+            automaticallyImplyLeading: false,
             backgroundColor: Colors.white,
             title: TabBar(
               tabs: tabs,
@@ -32,17 +70,6 @@ class _ForYouPageState extends State<ForYouPage> {
                   _selectedTabIndex = index;
                 });
               },
-              indicator: BoxDecoration(
-                borderRadius: BorderRadius.circular(20),
-                gradient: LinearGradient(
-                  colors: [
-                    Colors.blue.withOpacity(0.8),
-                    Colors.blue.withOpacity(0.5),
-                  ],
-                  begin: Alignment.centerLeft,
-                  end: Alignment.centerRight,
-                ),
-              ),
               labelStyle: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -51,7 +78,7 @@ class _ForYouPageState extends State<ForYouPage> {
                 fontSize: 16,
                 fontWeight: FontWeight.normal,
               ),
-              labelColor: Colors.white,
+              labelColor: Colors.blue,
               unselectedLabelColor: Colors.grey,
             ),
           ),
@@ -65,96 +92,159 @@ class _ForYouPageState extends State<ForYouPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Trending Restaurants',
+                    'Trending Near You',
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   SizedBox(height: 8),
-                  RestaurantCard(
-                    name: 'Restaurant 1',
-                    rating: 4.5,
-                    imageUrl: 'assets/1.png',
-                    onPressed: () {
-                      _showCardDetails('Restaurant 1', 4.5, 'assets/1.png');
-                    },
-                  ),
-                  RestaurantCard(
-                    name: 'Restaurant 2',
-                    rating: 4.2,
-                    imageUrl: 'assets/2.png',
-                    onPressed: () {
-                      _showCardDetails('Restaurant 2', 4.2, 'assets/2.png');
-                    },
-                  ),
-                  // Add more RestaurantCard widgets here
+                  // Check if _trending is empty
+                  if (_trending.isEmpty)
+                    Center(child: Text("No trending restaurants available"))
+                  else
+                    ..._trending.map((item) {
+                      return RestaurantCard(
+                        name: item['name'], // Make sure these keys match your JSON structure
+                        rating: double.tryParse(item['avg_rating']) ?? 0.0,
+                        imageUrl: item['imageUrl'] ?? 'assets/0.png',
+                        onPressed: () {
+                          _showBusinessPopup(
+                            item['name'] ?? 'Unknown',
+                            double.tryParse(item['avg_rating']) ?? 0.0,
+                            item['imageUrl'] ?? 'assets/0.png',
+                          );                        },
+                      );
+                    }).toList(),
                 ],
               ),
             ),
-            // Most Recent Screen
-            SingleChildScrollView(
-              padding: EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Most Recent Reviews',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                  ReviewCard(
-                    restaurantName: 'Restaurant 1',
-                    userName: 'User 1',
-                    rating: 4.5,
-                    reviewText: 'Great food and service!',
-                    onPressed: () {
-                      _showCardDetails('Restaurant 1', 4.5, 'assets/1.png');
-                    },
-                  ),
-                  ReviewCard(
-                    restaurantName: 'Restaurant 2',
-                    userName: 'User 2',
-                    rating: 4.2,
-                    reviewText: 'Awesome experience!',
-                    onPressed: () {
-                      _showCardDetails('Restaurant 2', 4.2, 'assets/2.png');
-                    },
-                  ),
-                  // Add more ReviewCard widgets here
-                ],
-              ),
-            ),
+            // Add other tabs if needed
           ],
         ),
       ),
     );
   }
 
-  void _showCardDetails(String name, double rating, String imageUrl) {
-    showDialog(
+
+  void _showBusinessPopup(String businessName, double rating, String imageUrl) {
+    showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       builder: (BuildContext context) {
-        return CardDetailsDialog(
-          name: name,
-          rating: rating,
-          imageUrl: imageUrl,
-          reviews: [
-            // Add static reviews here
-            Review(
-              userName: 'User 1',
-              rating: 4.5,
-              reviewText: 'Great place!',
+        return FractionallySizedBox(
+          heightFactor: 0.9,
+          child: Container(
+            padding: EdgeInsets.all(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Details',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.close),
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                    ),
+                  ],
+                ),
+                SizedBox(height: 16),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12.0),
+                  child: Image.asset(
+                    imageUrl,
+                    width: double.infinity,
+                    height: 150,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+                SizedBox(height: 16),
+                Text(
+                  businessName,
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 4),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.star,
+                      color: Colors.amber,
+                      size: 14,
+                    ),
+                    Text(
+                      ' $rating',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.amber,
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 16),
+                Text(
+                  'Description:',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+                Text(
+                  '24 Hours · Drive Thru · All Day Breakfast · Mobile Offers · Indoor Playplace · McCafé® · Wi-fi · Outdoor Seating',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.black54,
+                  ),
+                ),
+                SizedBox(height: 16),
+                Text(
+                  'Location:',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+                Text(
+                  '1555 Banks Rd, Kelowna, BC V1X 7Y8',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.black54,
+                  ),
+                ),
+                SizedBox(height: 16),
+                Center(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).push(MaterialPageRoute(
+                        builder: (context) => ItemReviewScreen(companyName: businessName,),
+                      ));
+                    },
+                    child: Text('View Reviews', style: TextStyle(fontSize: 18)),
+                    style: ElevatedButton.styleFrom(
+                      primary: Colors.white,
+                      padding: EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
-            Review(
-              userName: 'User 2',
-              rating: 4.0,
-              reviewText: 'Nice ambiance!',
-            ),
-          ],
+          ),
         );
       },
     );
@@ -320,127 +410,4 @@ class ReviewCard extends StatelessWidget {
       ),
     );
   }
-}
-
-class CardDetailsDialog extends StatelessWidget {
-  final String name;
-  final double rating;
-  final String imageUrl;
-  final List<Review> reviews;
-
-  CardDetailsDialog({
-    required this.name,
-    required this.rating,
-    required this.imageUrl,
-    required this.reviews,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12.0),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Image.asset(
-            imageUrl,
-            width: double.infinity,
-            height: 200,
-            fit: BoxFit.cover,
-          ),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  name,
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                SizedBox(height: 8),
-                Row(
-                  children: [
-                    Icon(
-                      Icons.star,
-                      color: Colors.amber,
-                      size: 14,
-                    ),
-                    Text(
-                      ' $rating',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.amber,
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 16),
-                Text(
-                  'Reviews:',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                SizedBox(height: 8),
-                // Display static reviews here
-                for (Review review in reviews) ...[
-                  Text(
-                    'User: ${review.userName}',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.star,
-                        color: Colors.amber,
-                        size: 14,
-                      ),
-                      Text(
-                        ' ${review.rating}',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.amber,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Text(
-                    review.reviewText,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.black54,
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                ],
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class Review {
-  final String userName;
-  final double rating;
-  final String reviewText;
-
-  Review({
-    required this.userName,
-    required this.rating,
-    required this.reviewText,
-  });
 }
