@@ -1,6 +1,65 @@
 import 'package:flutter/material.dart';
 import 'my_reviews.dart';
-class ProfileScreen extends StatelessWidget {
+import 'dart:async';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'dart:io';
+import 'package:http/io_client.dart';
+import 'auth_provider.dart';
+import 'package:provider/provider.dart';
+
+class ProfileScreen extends StatefulWidget {
+  @override
+  _ProfileScreenState createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  String userName = '';
+  String userEmail = '';
+
+  @override
+  void initState() {
+    super.initState();
+    fetchUserData(); // Fetch user data when the widget initializes
+  }
+
+  Future<void> fetchUserData() async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false); // Access the AuthProvider
+    final token = authProvider.token; // Obtain the authentication token from AuthProvider
+    http.Client httpClient = createHttpClient(); // Custom HTTP client
+    final url = 'https://10.0.0.201:5050/user'; // Replace with your backend URL
+
+    print('Fetching user data from: $url'); // Debugging: Print the URL you are requesting
+
+
+    final headers = {
+      HttpHeaders.authorizationHeader: 'Bearer $token', // Include the token in the headers
+    };
+
+    final response = await httpClient.get(Uri.parse(url), headers: headers);
+
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> userData = json.decode(response.body);
+      print('User data fetched successfully: $userData'); // Debugging: Print the fetched user data
+      setState(() {
+        userName = userData['username']; // Change to 'username' based on your response
+        userEmail = userData['email'];
+      });
+    } else {
+      // Handle error here
+      print('Failed to fetch user data: ${response.statusCode}');
+      print('Response body: ${response.body}'); // Debugging: Print the response body for further debugging
+    }
+  }
+
+
+  // Create a custom http client
+  http.Client createHttpClient() {
+    final ioClient = HttpClient()
+      ..badCertificateCallback = (X509Certificate cert, String host, int port) => true; // Bypass handshake error
+    return IOClient(ioClient);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -15,7 +74,7 @@ class ProfileScreen extends StatelessWidget {
         child: Center(
           child: Container(
             width: 300,
-            height: 320, // Reduced card height
+            height: 320,
             padding: EdgeInsets.all(20),
             decoration: BoxDecoration(
               color: Colors.white,
@@ -46,7 +105,7 @@ class ProfileScreen extends StatelessWidget {
                 ),
                 SizedBox(height: 16),
                 Text(
-                  'John Doe',
+                  userName,
                   style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
@@ -55,7 +114,7 @@ class ProfileScreen extends StatelessWidget {
                 ),
                 SizedBox(height: 8),
                 Text(
-                  'john.doe@example.com',
+                  userEmail,
                   style: TextStyle(
                     fontSize: 16,
                     color: Colors.grey,
@@ -82,7 +141,6 @@ class ProfileScreen extends StatelessWidget {
                       MaterialPageRoute(builder: (context) => MyReviewsScreen()), // Replace 'user_id' with actual user ID
                     );
                   },
-
                 ),
                 // Add more options as needed
               ],
