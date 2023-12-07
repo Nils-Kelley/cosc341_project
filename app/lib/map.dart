@@ -29,9 +29,10 @@ class _MapScreenState extends State<MapScreen> {
   void initState() {
     super.initState();
     _getCurrentLocation();
-    _selectedCategory = widget.selectedCategory;
+    _selectedCategory = widget.selectedCategory ?? 'businesses'; // Default to 'businesses' if null
     print('initState - Selected Category: $_selectedCategory'); // Debugging
   }
+
 
   Future<void> _getCurrentLocation() async {
     LocationData? currentLocation;
@@ -72,41 +73,33 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   Widget _buildCategoryButton(String category) {
-    bool isSelected = _selectedCategory == category;
+    bool isSelected = _selectedCategory == category.toLowerCase();
 
     return Expanded(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8.0),
         child: ElevatedButton(
-          style: ButtonStyle(
-            backgroundColor: MaterialStateProperty.all<Color>(
-              isSelected ? Colors.white : Colors.blue,
-            ),
-            elevation: MaterialStateProperty.all<double>(0.0),
-            shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-              RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(30),
-                side: BorderSide(
-                  color: Colors.blue,
-                  width: 2.0,
-                ),
-              ),
+          style: ElevatedButton.styleFrom(
+            primary: isSelected ? Colors.white : Colors.blue,
+            onPrimary: isSelected ? Colors.blue : Colors.white,
+            side: BorderSide(color: Colors.blue, width: 2),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(30),
             ),
           ),
-          onPressed: () => setState(() {
-            _selectedCategory = category.toLowerCase();
-            print('Button Press - Selected Category: $_selectedCategory');
-            _loadMarkersByCategory(_selectedCategory);
-          }),
-          child: RichText(
-            text: TextSpan(
-              text: category,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: isSelected ? Colors.blue : Colors.white,
-                decoration: isSelected ? TextDecoration.underline : TextDecoration.none,
-              ),
+          onPressed: () {
+            setState(() {
+              _selectedCategory = category.toLowerCase();
+              _loadMarkersByCategory(_selectedCategory);
+            });
+          },
+          child: Text(
+            category,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              // Removed the conditional decoration, set to none
+              decoration: TextDecoration.none,
             ),
           ),
         ),
@@ -116,7 +109,19 @@ class _MapScreenState extends State<MapScreen> {
 
 
 
-
+  Widget _buildButtonLabel(String category, bool isSelected) {
+    return RichText(
+      text: TextSpan(
+        text: category,
+        style: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+          color: isSelected ? Colors.blue : Colors.white,
+          decoration: isSelected ? TextDecoration.underline : TextDecoration.none,
+        ),
+      ),
+    );
+  }
 
   Future<void> _loadMarkersByCategory(String? category) async {
     _markers.clear(); // Clear existing markers
@@ -186,13 +191,13 @@ class _MapScreenState extends State<MapScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        automaticallyImplyLeading: false, // Remove the back button
+        automaticallyImplyLeading: false,
         actions: <Widget>[
           _buildCategoryButton('Businesses'),
           _buildCategoryButton('Restaurants'),
         ],
-        elevation: 0, // Remove the app bar's shadow
-        backgroundColor: Colors.blue, // Set background color to blue
+        elevation: 0,
+        backgroundColor: Colors.blue,
       ),
       body: GoogleMap(
         mapType: MapType.normal,
