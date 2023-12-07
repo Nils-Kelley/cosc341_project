@@ -120,9 +120,12 @@ class LoginScreen extends StatelessWidget {
       if (response.statusCode == 200) {
         final responseData = json.decode(response.body);
         final token = responseData['token'];
+        final userId = responseData['userId']; // Assuming the API response contains the user ID
+
         if (token != null) {
-          // Store the token using AuthProvider
+          // Store the token and user ID using AuthProvider
           Provider.of<AuthProvider>(context, listen: false).setToken(token);
+          Provider.of<AuthProvider>(context, listen: false).setUserData(userId.toString(), email);
 
           Navigator.pushReplacement(
             context,
@@ -138,6 +141,7 @@ class LoginScreen extends StatelessWidget {
       print('An error occurred: $e');
     }
   }
+
 
   Widget _buildTextField({
     required String labelText,
