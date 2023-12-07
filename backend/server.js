@@ -333,35 +333,45 @@ app.post('/submit-review', verifyToken, async (req, res) => {
     res.status(500).json({ message: 'An error occurred while submitting the review.' });
   }
 });
+app.get('/reviews/locations/:category', async (req, res) => {
+  const category = req.params.category;
+  console.log(`Received category: ${category}`); // Log the received category
 
-
-app.get('/reviews/locations', async (req, res) => {
   try {
-    const query = `
+    let query = `
       SELECT
         r.id as review_id,
         r.reviewable_type,
         r.rating,
         r.comment,
-        COALESCE(b.name, i.name, rest.name) as name,
-        COALESCE(a.latitude, a_rest.latitude, a_item.latitude) as latitude,
-        COALESCE(a.longitude, a_rest.longitude, a_item.longitude) as longitude
+        COALESCE(b.name, rest.name) as name,
+        COALESCE(a.latitude, a_rest.latitude) as latitude,
+        COALESCE(a.longitude, a_rest.longitude) as longitude
       FROM reviews r
+      LEFT JOIN addresses a ON r.location_id = a.id
       LEFT JOIN businesses b ON r.reviewable_id = b.id AND r.reviewable_type = 'business'
-      LEFT JOIN addresses a ON b.address_id = a.id
+      LEFT JOIN addresses a_rest ON r.location_id = a_rest.id
       LEFT JOIN restaurants rest ON r.reviewable_id = rest.id AND r.reviewable_type = 'restaurant'
-      LEFT JOIN addresses a_rest ON rest.address_id = a_rest.id
-      LEFT JOIN items i ON r.reviewable_id = i.id AND r.reviewable_type = 'item'
-      LEFT JOIN addresses a_item ON i.address_id = a_item.id
     `;
 
+    if (category === 'businesses') {
+      query += ` WHERE r.reviewable_type = 'business'`;
+    } else if (category === 'restaurants') {
+      query += ` WHERE r.reviewable_type = 'restaurant'`;
+    }
+
+    console.log(`Executing query: ${query}`); // Log the SQL query
+
     const reviewsWithLocations = await executeQuery(query);
+    console.log(`Query results: ${JSON.stringify(reviewsWithLocations)}`); // Log query results
+
     res.json(reviewsWithLocations);
   } catch (err) {
-    console.error(err);
+    console.error(`Error during query execution: ${err}`);
     res.status(500).json({ message: 'An error occurred while fetching reviews with locations.' });
   }
 });
+
 
 app.get('/reviews', async (req, res) => {
   try {
