@@ -10,6 +10,7 @@ import 'settings_page.dart';
 import 'map.dart';
 import 'forum.dart';
 import 'package:flutter_svg/flutter_svg.dart'; // Import the flutter_svg package
+import 'chat_page.dart';
 
 void main() {
   runApp(const MyApp());
@@ -152,7 +153,7 @@ class _MyHomePageState extends State<MyHomePage> {
     return InkWell(
       onTap: () {
         Navigator.of(context).push(
-          MaterialPageRoute(builder: (context) => ForumScreen()),
+          MaterialPageRoute(builder: (context) => ChatPage()),
         );
       },
       child: Padding(

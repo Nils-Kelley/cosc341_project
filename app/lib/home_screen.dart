@@ -103,8 +103,21 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 controller: searchController,
                 decoration: InputDecoration(
                   labelText: 'Search',
-                  prefixIcon: Icon(Icons.search),
-                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.search, color: Colors.blue), // Use blue color for the search icon
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(30.0), // Make it rounded
+                    borderSide: BorderSide(
+                      color: Colors.blue, // Use blue color for the border
+                      width: 2.0,
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(30.0),
+                    borderSide: BorderSide(
+                      color: Colors.blue, // Use blue color for the focused border
+                      width: 2.0,
+                    ),
+                  ),
                 ),
                 onChanged: (query) {
                   setState(() {
@@ -288,7 +301,23 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   ),
                 ),
                 Text(
-                  'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed eget pulvinar leo. Fusce tincidunt mi sit amet orci vehicula, in tempor erat fringilla. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Nulla facilisi. Vestibulum luctus urna sit amet sem hendrerit, in facilisis nisi consectetur.',
+                  '24 Hours · Drive Thru · All Day Breakfast · Mobile Offers · Indoor Playplace · McCafé® · Wi-fi · Outdoor Seating',
+                  style: appTextTheme.bodyText2!.copyWith(
+                    fontSize: 14,
+                    color: Colors.black54,
+                  ),
+                ),
+                SizedBox(height: 16),
+                Text(
+                  'Location:',
+                  style: appTextTheme.bodyText1!.copyWith(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    color: primaryColor, // Use your custom color
+                  ),
+                ),
+                Text(
+                  '1555 Banks Rd, Kelowna, BC V1X 7Y8',
                   style: appTextTheme.bodyText2!.copyWith(
                     fontSize: 14,
                     color: Colors.black54,
