@@ -487,17 +487,33 @@ app.get('/reviews/existing-locations', async (req, res) => {
     res.status(500).json({ message: 'An error occurred while fetching existing locations.' });
   }
 });
+
 app.get('/reviews/:name', async (req, res) => {
     const name = req.params.name;
     console.log(`Received request for reviews of: ${name}`); // Log the name received
 
     try {
-        let query = `
+        // First, get the average rating for the given name
+        let avgRatingQuery = `
+            SELECT AVG(r.rating) as avg_rating
+            FROM reviews r
+            WHERE r.reviewable_id IN (
+                SELECT id FROM businesses WHERE name = ?
+                UNION
+                SELECT id FROM restaurants WHERE name = ?
+            )
+            AND (r.reviewable_type = 'business' OR r.reviewable_type = 'restaurant');
+        `;
+
+        const avgRatingResult = await executeQuery(avgRatingQuery, [name, name]);
+        const avgRating = avgRatingResult[0].avg_rating;
+
+        // Then, get all the reviews with the computed average rating
+        let reviewsQuery = `
             SELECT
                 r.rating,
                 r.comment,
-                r.created_at,
-                (SELECT AVG(rating) FROM reviews WHERE reviewable_id = r.reviewable_id AND reviewable_type = r.reviewable_type) as avg_rating
+                r.created_at
             FROM
                 reviews r
             WHERE
@@ -506,18 +522,20 @@ app.get('/reviews/:name', async (req, res) => {
                     UNION
                     SELECT id FROM restaurants WHERE name = ?
                 )
-            AND
-                (r.reviewable_type = 'business' OR r.reviewable_type = 'restaurant');
+            AND (r.reviewable_type = 'business' OR r.reviewable_type = 'restaurant');
         `;
 
-        console.log("Executing query: ", query); // Log the query being executed
-        const results = await executeQuery(query, [name, name]);
+        console.log("Executing query for reviews: ", reviewsQuery); // Log the query being executed
+        const reviews = await executeQuery(reviewsQuery, [name, name]);
+
+        // Add the average rating to each review
+        const results = reviews.map(review => ({ ...review, avg_rating: avgRating }));
         console.log("Query executed successfully. Results: ", results); // Log the results of the query
 
         res.json(results);
     } catch (err) {
         console.error(`Error during query execution: ${err}`); // Log detailed error
-        console.error(`Query that caused error: ${query}`); // Log the query that caused the error
+        console.error(`Query that caused error: ${avgRatingQuery} and ${reviewsQuery}`); // Log the queries that caused the error
         console.error(`Parameters for the query: ${name}`); // Log parameters for the query
         res.status(500).send('Server error');
     }
