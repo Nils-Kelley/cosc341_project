@@ -119,3 +119,12 @@ CREATE TABLE IF NOT EXISTS reviews (
   FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
   FOREIGN KEY (location_id) REFERENCES addresses (id) -- Define a foreign key relationship with the 'addresses' table
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Create a Forum Messages table
+CREATE TABLE IF NOT EXISTS forum_messages (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT,
+  text TEXT NOT NULL,
+  timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

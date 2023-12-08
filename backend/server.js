@@ -288,6 +288,40 @@ app.get('/reviews/user/:userId', async (req, res) => {
   }
 });
 
+app.post('/forum/post-message', verifyToken, async (req, res) => {
+  const userId = req.userId;
+  const { text } = req.body;
+
+  if (!text) {
+    return res.status(400).json({ message: 'No message provided.' });
+  }
+
+  try {
+    const query = 'INSERT INTO forum_messages (user_id, text) VALUES (?, ?)';
+    await executeQuery(query, [userId, text]);
+    res.status(201).json({ message: 'Message posted successfully' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'An error occurred while posting the message.' });
+  }
+});
+
+app.get('/forum/get-messages', async (req, res) => {
+  try {
+    const query = `
+      SELECT fm.id, fm.text, fm.timestamp, u.username
+      FROM forum_messages fm
+      JOIN users u ON fm.user_id = u.id
+      ORDER BY fm.timestamp DESC
+      LIMIT 100`; // Adjust the limit as needed
+    const messages = await executeQuery(query);
+    res.json(messages);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'An error occurred while fetching messages.' });
+  }
+});
+
 
 app.post('/submit-review', verifyToken, async (req, res) => {
   const userId = req.userId;
