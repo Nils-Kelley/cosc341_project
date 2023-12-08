@@ -1,8 +1,8 @@
 # Team 21 - COSC 341 Project - RateIt
 
 ## Things To Note
-Port 5050: Node,js
-Port 3306: SQL
+- Port 5050: Node,js
+- Port 3306: SQL
 
 ## (Required):
  - **Node** 
