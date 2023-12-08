@@ -1,4 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'auth_provider.dart';
+import 'dart:io';
+import 'package:http/io_client.dart';
+import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
+import 'main.dart';
 
 class ChatPage extends StatefulWidget {
   @override
@@ -7,71 +15,123 @@ class ChatPage extends StatefulWidget {
 
 class _ChatPageState extends State<ChatPage> {
   TextEditingController _messageController = TextEditingController();
-  List<Map<String, dynamic>> _messages = [
-    {
-      'username': 'John Doe',
-      'text': 'Has anyone tried the Gatherer restaurant downtown?',
-      'isMe': false,
-      'timestamp': '10:00 AM',
-    },
-    {
-      'username': 'Alice Smith',
-      'text': 'I\'ve been there, and it\'s fantastic!',
-      'isMe': true,
-      'timestamp': '10:05 AM',
-    },
-    {
-      'username': 'Bob Johnson',
-      'text': 'I went there last week. The food was amazing!',
-      'isMe': false,
-      'timestamp': '10:10 AM',
-    },
-    {
-      'username': 'Eva Green',
-      'text': 'Im planning to visit Gatherer soon. Any recommendations?',
-      'isMe': false,
-      'timestamp': '10:15 AM',
-    },
-    {
-      'username': 'Charlie Brown',
-      'text': 'You should try their pasta dishes. They are excellent!',
-      'isMe': true,
-      'timestamp': '10:20 AM',
-    },
-    {
-      'username': 'Grace Miller',
-      'text': 'Im a vegetarian. Do they have good vegetarian options?',
-      'isMe': false,
-      'timestamp': '10:25 AM',
-    },
-    {
-      'username': 'Daniel Lee',
-      'text': 'Yes, they have some delicious vegetarian options!',
-      'isMe': true,
-      'timestamp': '10:30 AM',
-    },
-    // Add more messages and users here...
-  ];
+  List<Map<String, dynamic>> _messages = [];
+  final _authProvider = AuthProvider();
+  ScrollController _scrollController = ScrollController();
 
-  void _sendMessage(String messageText) {
-    if (messageText.isNotEmpty) {
-      setState(() {
-        _messages.add({
-          'username': 'Kelowna Local', // Add the sender's username here
-          'text': messageText,
-          'isMe': true,
-          'timestamp': _getCurrentTime(),
-        });
-        _messageController.clear();
-      });
+  @override
+  void initState() {
+    super.initState();
+    _fetchMessages();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  String formatDate(String dateString) {
+    final DateTime dateTime = DateTime.parse(dateString);
+    final String month = DateFormat.MMM().format(dateTime);
+    final String day = DateFormat.d().format(dateTime);
+    final String year = DateFormat.y().format(dateTime);
+    final String suffix = getDaySuffix(int.parse(day));
+    return '$month $day$suffix, $year';
+  }
+
+  String getDaySuffix(int day) {
+    if (day >= 11 && day <= 13) {
+      return 'th';
+    }
+    switch (day % 10) {
+      case 1:
+        return 'st';
+      case 2:
+        return 'nd';
+      case 3:
+        return 'rd';
+      default:
+        return 'th';
     }
   }
 
-  String _getCurrentTime() {
-    final DateTime now = DateTime.now();
-    final String formattedTime =
-        '${now.hour}:${now.minute.toString().padLeft(2, '0')}';
-    return formattedTime;
+  String formatTimestamp(String timestamp) {
+    final now = DateTime.now();
+    final messageTime = DateTime.parse(timestamp);
+
+    final difference = now.difference(messageTime);
+
+    if (difference.inSeconds < 60) {
+      return 'Just now';
+    } else if (difference.inMinutes < 60) {
+      final minutes = difference.inMinutes;
+      return '$minutes min ago';
+    } else if (difference.inHours < 24) {
+      final hours = difference.inHours;
+      return '$hours hours ago';
+    } else {
+      final dateFormatter = DateFormat('MMM d, y');
+      return dateFormatter.format(messageTime);
+    }
+  }
+
+  Future<void> _fetchMessages() async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final httpClient = createHttpClient();
+    try {
+      final response = await httpClient.get(
+        Uri.parse('https://10.0.0.201:5050/forum/get-messages'),
+        headers: {
+          HttpHeaders.authorizationHeader: 'Bearer ${authProvider.token}',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final messageList = json.decode(response.body) as List;
+        setState(() {
+          _messages = messageList.map((message) => {
+            'username': message['username'],
+            'text': message['text'],
+            'timestamp': formatTimestamp(message['timestamp']),
+            'isMe': message['user_id'] == _authProvider.getCurrentUserID(),
+          }).toList();
+        });
+        _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+      }
+    } catch (e) {
+      print('Error in Fetching Messages: $e');
+    }
+  }
+
+  Future<void> _sendMessage(String messageText) async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    if (messageText.isNotEmpty) {
+      final httpClient = createHttpClient();
+      try {
+        final response = await httpClient.post(
+          Uri.parse('https://10.0.0.201:5050/forum/post-message'),
+          headers: {
+            HttpHeaders.authorizationHeader: 'Bearer ${authProvider.token}',
+            HttpHeaders.contentTypeHeader: 'application/json',
+          },
+          body: json.encode({'text': messageText}),
+        );
+
+        if (response.statusCode == 201) {
+          _fetchMessages();
+        }
+      } catch (e) {
+        print('Error in Sending Message: $e');
+      }
+      _messageController.clear();
+    }
+  }
+
+  http.Client createHttpClient() {
+    final ioClient = HttpClient()
+      ..badCertificateCallback = (X509Certificate cert, String host, int port) => true;
+    return IOClient(ioClient);
   }
 
   Widget _buildMessageTile(int index) {
@@ -90,7 +150,10 @@ class _ChatPageState extends State<ChatPage> {
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(message['text']),
+          Text(
+            message['text'],
+            style: TextStyle(fontSize: 16),
+          ),
           SizedBox(height: 4),
           Text(
             message['timestamp'],
@@ -98,7 +161,12 @@ class _ChatPageState extends State<ChatPage> {
           ),
         ],
       ),
-      trailing: message['isMe'] ? null : SizedBox(width: 36),
+      trailing: message['isMe']
+          ? null
+          : Icon(
+        Icons.arrow_forward,
+        color: Colors.blue,
+      ),
     );
   }
 
@@ -106,26 +174,44 @@ class _ChatPageState extends State<ChatPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        elevation: 2, // Add elevation to the AppBar
-        backgroundColor: Colors.white, // Set background color to white
+        elevation: 2,
+        backgroundColor: Colors.blue,
         title: Text(
           'Community Forum',
           style: TextStyle(
-            color: Colors.blue, // Set title color to blue
+            color: Colors.white,
             fontSize: 24,
             fontWeight: FontWeight.bold,
           ),
         ),
-        iconTheme: IconThemeData(color: Colors.blue), // Set icon color to blue
+        iconTheme: IconThemeData(color: Colors.white),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.home), // Home icon
+            onPressed: () {
+              // Navigate to the HomeScreen class
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => MyHomePage()),
+              );
+            },
+          ),
+        ],
       ),
       body: Column(
         children: [
           Expanded(
-            child: ListView.builder(
-              itemCount: _messages.length,
-              itemBuilder: (ctx, index) {
-                return _buildMessageTile(index);
-              },
+            child: Container(
+              padding: EdgeInsets.all(10),
+              color: Color(0xFFF5F5F5),
+              child: ListView.builder(
+                controller: _scrollController,
+                reverse: true,
+                itemCount: _messages.length,
+                itemBuilder: (ctx, index) {
+                  return _buildMessageTile(index);
+                },
+              ),
             ),
           ),
           Divider(),
@@ -138,14 +224,30 @@ class _ChatPageState extends State<ChatPage> {
                     controller: _messageController,
                     decoration: InputDecoration(
                       hintText: 'Type your message...',
+                      filled: true,
+                      fillColor: Colors.white,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(20.0),
+                      ),
                     ),
                   ),
                 ),
-                IconButton(
-                  icon: Icon(Icons.send),
+                SizedBox(width: 10),
+                ElevatedButton(
                   onPressed: () {
                     _sendMessage(_messageController.text);
                   },
+                  style: ElevatedButton.styleFrom(
+                    primary: Colors.blue,
+                    elevation: 2,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20.0),
+                    ),
+                  ),
+                  child: Icon(
+                    Icons.send,
+                    color: Colors.white,
+                  ),
                 ),
               ],
             ),
