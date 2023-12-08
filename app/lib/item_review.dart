@@ -1,7 +1,9 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
-
+import 'package:intl/intl.dart';
+import 'review_card.dart';
+import 'main.dart';
 class ItemReviewScreen extends StatefulWidget {
   final String companyName;
 
@@ -12,15 +14,15 @@ class ItemReviewScreen extends StatefulWidget {
 }
 
 class _ItemReviewScreenState extends State<ItemReviewScreen> {
-  List<Map<String, dynamic>> reviews = []; // Changed to dynamic
+  List<Map<String, dynamic>> reviews = [];
 
   @override
   void initState() {
     super.initState();
-    _fetchreviews(widget.companyName);
+    _fetchReviews(widget.companyName);
   }
 
-  Future<void> _fetchreviews(String name) async {
+  Future<void> _fetchReviews(String name) async {
     final String apiUrl = 'https://10.0.0.201:5050/reviews/$name';
     final client = HttpClient()
       ..badCertificateCallback = (X509Certificate cert, String host, int port) => true;
@@ -48,6 +50,44 @@ class _ItemReviewScreenState extends State<ItemReviewScreen> {
     }
   }
 
+  Card buildAverageRatingCard(double averageRating) {
+    return Card(
+      elevation: 4,
+      margin: EdgeInsets.all(16),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      color: Colors.blue,
+      child: Padding(
+        padding: EdgeInsets.all(16),
+        child: Column(
+          children: [
+            Center(
+              child: Text(
+                'Average Rating',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+            SizedBox(height: 8),
+            Text(
+              averageRating.toStringAsFixed(1),
+              style: TextStyle(
+                fontSize: 32,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+
   @override
   Widget build(BuildContext context) {
     double averageRating = 0.0;
@@ -58,75 +98,51 @@ class _ItemReviewScreenState extends State<ItemReviewScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          widget.companyName + ' Reviews',
+          widget.companyName,
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
         backgroundColor: Colors.blue,
         elevation: 4,
-      ),
-      body: Column(
-        children: [
-          Container(
-            padding: EdgeInsets.all(16),
-            alignment: Alignment.center,
-            child: Text(
-              'Average Rating: ${averageRating.toStringAsFixed(1)}',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-          ),
-          Expanded(
-            child: ListView.builder(
-              itemCount: reviews.length,
-              itemBuilder: (context, index) {
-                var review = reviews[index];
-                return ReviewCard(
-                  comment: review['comment'] ?? '', // Handling null
-                  rating: review['rating'].toString(), // Handling different types
-                  date: review['created_at'].toString(), // Handling different types
-                );
-              },
-            ),
+        iconTheme: IconThemeData(
+          color: Colors.white, // Set the color of the back button to white
+        ),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.home), // Home icon
+            onPressed: () {
+              // Navigate to the HomeScreen class
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => MyHomePage()),
+              );
+            },
           ),
         ],
       ),
-    );
-  }
-}
-
-class ReviewCard extends StatelessWidget {
-  final String comment;
-  final String rating;
-  final String date;
-
-  ReviewCard({
-    required this.comment,
-    required this.rating,
-    required this.date,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      elevation: 4,
-      margin: EdgeInsets.all(16),
-      child: Padding(
-        padding: EdgeInsets.all(16),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.white, Colors.white],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            ListTile(
-              leading: CircleAvatar(
-                backgroundImage: AssetImage('assets/profile.png'),
-                radius: 24,
-              ),
-              subtitle: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Content: $comment'),
-                  Text('Rating: $rating'),
-                  Text('Date: $date'),
-                ],
+            buildAverageRatingCard(averageRating), // Use the custom card here
+            Expanded(
+              child: ListView.builder(
+                itemCount: reviews.length,
+                itemBuilder: (context, index) {
+                  var review = reviews[index];
+                  return ReviewCard(
+                    comment: review['comment'] ?? '',
+                    rating: review['rating'].toString(),
+                    date: _formatDate(review['created_at'].toString()),
+                  );
+                },
               ),
             ),
           ],
@@ -134,4 +150,12 @@ class ReviewCard extends StatelessWidget {
       ),
     );
   }
+
+  String _formatDate(String inputDate) {
+    final DateTime date = DateTime.parse(inputDate);
+    final String formattedDate = DateFormat.yMMMd().format(date);
+
+    return formattedDate;
+  }
 }
+

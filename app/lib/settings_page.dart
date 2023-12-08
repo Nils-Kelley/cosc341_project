@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'auth_provider.dart';
 import 'logout.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'faq.dart'; // Import the FAQ page
 
 class SettingsPage extends StatefulWidget {
   @override
@@ -21,47 +22,25 @@ class _SettingsPageState extends State<SettingsPage> {
           style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 24, color: Colors.white),
         ),
         backgroundColor: Colors.blue,
+        iconTheme: IconThemeData(
+          color: Colors.white, // Set the color of the back button to white
+        ),
       ),
       body: ListView(
         padding: EdgeInsets.all(15),
         children: [
           SizedBox(height: 20),
-          settingsCard(
-            children: [
-              settingsTile(
-                icon: Icons.post_add,
-                color: Colors.purple,
-                title: 'Manage Your Reviews',
-              ),
-            ],
+          settingsTile(
+            icon: Icons.question_answer,
+            color: Colors.orange,
+            title: 'FAQ\'s',
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => FAQPage()),
+              );
+            },
           ),
-          SizedBox(height: 20),
-          settingsCard(
-            children: [
-              settingsTile(
-                icon: Icons.privacy_tip,
-                color: Colors.red,
-                title: 'Privacy & Security',
-              ),
-            ],
-          ),
-          SizedBox(height: 20),
-          settingsCard(
-            children: [
-              settingsTile(
-                icon: Icons.feedback,
-                color: Colors.grey,
-                title: 'Feedback/Report Issues',
-              ),
-              settingsTile(
-                icon: Icons.info_outline,
-                color: Colors.blueGrey,
-                title: 'About',
-              ),
-            ],
-          ),
-
-          SizedBox(height: 20),
           settingsTile(
             icon: Icons.exit_to_app,
             color: Colors.red,

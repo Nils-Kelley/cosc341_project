@@ -7,14 +7,20 @@ import 'api_service.dart';
 import 'auth_provider.dart';
 import 'package:provider/provider.dart';
 
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends StatefulWidget {
+  @override
+  _LoginScreenState createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final ApiService _apiService = ApiService();
+  String _errorMessage = '';
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return Scaffold( // Wrap the entire screen in a Scaffold widget
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.transparent,
@@ -67,42 +73,6 @@ class LoginScreen extends StatelessWidget {
                 ),
               ),
               SizedBox(height: 10),
-              TextButton(
-                onPressed: () {
-                  // Implement your forgot password logic here
-                },
-                child: Text(
-                  'Forgot Password?',
-                  style: TextStyle(
-                    color: Colors.blue,
-                  ),
-                ),
-              ),
-              SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  Text(
-                    "Don't have an account? ",
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey,
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      // Implement navigation to the signup screen
-                    },
-                    child: Text(
-                      'Sign Up',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.blue,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
             ],
           ),
         ),
@@ -132,16 +102,15 @@ class LoginScreen extends StatelessWidget {
             MaterialPageRoute(builder: (context) => MyHomePage()),
           );
         } else {
-          print('Login successful, but no token received');
+          _showSnackBar('Login failed. Please check your credentials.');
         }
       } else {
-        print('Failed to login');
+        _showSnackBar('Login failed. Please check your credentials.');
       }
     } catch (e) {
-      print('An error occurred: $e');
+      _showSnackBar('An error occurred: $e');
     }
   }
-
 
   Widget _buildTextField({
     required String labelText,
@@ -165,6 +134,21 @@ class LoginScreen extends StatelessWidget {
           borderSide: BorderSide(color: Colors.grey, width: 1),
           borderRadius: BorderRadius.circular(30),
         ),
+      ),
+    );
+  }
+
+  void _showSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          message,
+          style: TextStyle(
+            fontSize: 16,
+            color: Colors.white,
+          ),
+        ),
+        backgroundColor: Colors.red,
       ),
     );
   }

@@ -1,69 +1,98 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'reviews.dart'; // Import the reviews.dart file
 
 class ReviewDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      backgroundColor: Colors.white,
-      title: Text(
-        'Leave a Review',
-        style: TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.bold,
-          color: Colors.lightBlue,
-        ),
+    return Dialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
       ),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            'Select an option below to leave a review:',
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.black87,
-            ),
-          ),
-          SizedBox(height: 20),
-          _reviewButton(context, 'Leave a Review for a Business', Icons.business, Colors.lightBlue, 'business'), // Updated
-          SizedBox(height: 12),
-          _reviewButton(context, 'Leave a Review for a Restaurant', Icons.restaurant, Colors.lightBlue[200]!, 'restaurant'), // Updated
-
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: Text(
-            'Cancel',
-            style: TextStyle(fontSize: 16, color: Colors.redAccent),
-          ),
-        ),
-      ],
+      elevation: 0,
+      backgroundColor: Colors.transparent,
+      child: contentBox(context),
     );
   }
 
-  Widget _reviewButton(BuildContext context, String text, IconData icon, Color color, String reviewType) {
-    return ElevatedButton.icon(
-      icon: Icon(icon, color: Colors.white),
-      label: Text(
-        text,
-        style: TextStyle(fontSize: 16, color: Colors.white),
+  Widget contentBox(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.5),
+            spreadRadius: 2,
+            blurRadius: 6,
+            offset: Offset(0, 3),
+          ),
+        ],
       ),
-      onPressed: () {
-        Navigator.of(context).push(
-          MaterialPageRoute(builder: (context) => ReviewsPage(reviewType: reviewType)),
-        );
-      },
-      style: ElevatedButton.styleFrom(
-        primary: color,
-        padding: EdgeInsets.symmetric(vertical: 16, horizontal: 32),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(height: 20),
+          Text(
+            'Leave a Review',
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.blue,
+            ),
+          ),
+          SizedBox(height: 20),
+          _reviewButton(context, 'Business', Icons.business, Colors.blue),
+          SizedBox(height: 12),
+          _reviewButton(context, 'Restaurant', Icons.restaurant, Colors.lightBlue),
+          SizedBox(height: 20),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(
+              'Cancel',
+              style: TextStyle(fontSize: 18, color: Colors.redAccent),
+            ),
+          ),
+          SizedBox(height: 20),
+        ],
+      ),
+    );
+  }
+
+  Widget _reviewButton(BuildContext context, String text, IconData icon, Color color) {
+    return Container(
+      width: double.infinity,
+      margin: EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(8),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.7),
+            spreadRadius: 1,
+            blurRadius: 5,
+            offset: Offset(0, 3),
+          ),
+        ],
+      ),
+      child: ElevatedButton.icon(
+        icon: Icon(icon, color: Colors.white),
+        label: Text(
+          'Leave a Review for a $text',
+          style: TextStyle(fontSize: 18, color: Colors.white),
         ),
-        shadowColor: Colors.black45,
-        elevation: 5,
+        onPressed: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (context) => ReviewsPage(reviewType: text.toLowerCase())),
+          );
+        },
+        style: ElevatedButton.styleFrom(
+          primary: Colors.transparent,
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+          padding: EdgeInsets.symmetric(vertical: 16, horizontal: 32),
+        ),
       ),
     );
   }

@@ -133,11 +133,22 @@ List<dynamic> _trending =[];
       isScrollControlled: true,
       builder: (BuildContext context) {
         return FractionallySizedBox(
-          heightFactor: 0.9,
+          heightFactor: 0.6,
           child: Container(
             padding: EdgeInsets.all(16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.withOpacity(0.5),
+                  spreadRadius: 2,
+                  blurRadius: 5,
+                  offset: Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Column(            mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
@@ -146,8 +157,9 @@ List<dynamic> _trending =[];
                     Text(
                       'Details',
                       style: TextStyle(
-                        fontSize: 24,
+                        fontSize: 24, // Adjust font size as needed
                         fontWeight: FontWeight.bold,
+                        color: Theme.of(context).primaryColor,
                       ),
                     ),
                     IconButton(
@@ -172,8 +184,9 @@ List<dynamic> _trending =[];
                 Text(
                   businessName,
                   style: TextStyle(
-                    fontSize: 24,
+                    fontSize: 24, // Adjust font size as needed
                     fontWeight: FontWeight.bold,
+                    color: Theme.of(context).primaryColor,
                   ),
                 ),
                 SizedBox(height: 4),
@@ -196,31 +209,17 @@ List<dynamic> _trending =[];
                 ),
                 SizedBox(height: 16),
                 Text(
-                  'Description:',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
-                Text(
-                  '24 Hours · Drive Thru · All Day Breakfast · Mobile Offers · Indoor Playplace · McCafé® · Wi-fi · Outdoor Seating',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.black54,
-                  ),
-                ),
-                SizedBox(height: 16),
-                Text(
                   'Location:',
                   style: TextStyle(
+                    fontSize: 18, // Adjust font size as needed
                     fontWeight: FontWeight.bold,
-                    fontSize: 16,
+                    color: Theme.of(context).primaryColor,
                   ),
                 ),
                 Text(
                   '1555 Banks Rd, Kelowna, BC V1X 7Y8',
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: 16, // Adjust font size as needed
                     color: Colors.black54,
                   ),
                 ),
@@ -229,16 +228,20 @@ List<dynamic> _trending =[];
                   child: ElevatedButton(
                     onPressed: () {
                       Navigator.of(context).push(MaterialPageRoute(
-                        builder: (context) => ItemReviewScreen(companyName: businessName,),
+                        builder: (context) => ItemReviewScreen(companyName: businessName),
                       ));
                     },
-                    child: Text('View Reviews', style: TextStyle(fontSize: 18)),
+                    child: Text(
+                      'View Reviews',
+                      style: TextStyle(fontSize: 18, color: Colors.white),
+                    ),
                     style: ElevatedButton.styleFrom(
-                      primary: Colors.white,
+                      primary: Theme.of(context).primaryColor,
                       padding: EdgeInsets.symmetric(horizontal: 32, vertical: 12),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
+                      elevation: 4, // Add elevation for a shadow effect
                     ),
                   ),
                 ),

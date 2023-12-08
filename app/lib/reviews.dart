@@ -117,7 +117,16 @@ class _ReviewsPageState extends State<ReviewsPage> {
       final responseBody = await response.stream.bytesToString();
 
       if (response.statusCode == 200) {
-        Navigator.pop(context); // Navigate back on success
+        // Navigate back on success
+        Navigator.pop(context);
+
+        // Displaying a snackbar to indicate success
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Review submitted successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
       } else {
         // Handle failure case
       }
@@ -125,7 +134,6 @@ class _ReviewsPageState extends State<ReviewsPage> {
       // Handle exceptions
     }
   }
-
 
   InputDecoration _inputDecoration(String hintText) {
     return InputDecoration(
@@ -144,9 +152,15 @@ class _ReviewsPageState extends State<ReviewsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Leave a Review', style: TextStyle(color: Colors.white)),
+        title: Text(
+          'Leave a Review',
+          style: TextStyle(color: Colors.white),
+        ),
         backgroundColor: Colors.blue[800],
         elevation: 10,
+        iconTheme: IconThemeData(
+          color: Colors.white, // Set the color of the back button to white
+        ),
         shadowColor: Colors.blue[900],
       ),
       body: SingleChildScrollView(
@@ -156,7 +170,11 @@ class _ReviewsPageState extends State<ReviewsPage> {
           children: <Widget>[
             Text(
               'Enter the ${widget.reviewType} name',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.blue[800]),
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.blue[800],
+              ),
             ),
             SizedBox(height: 10),
             TextField(
@@ -169,7 +187,11 @@ class _ReviewsPageState extends State<ReviewsPage> {
             SizedBox(height: 20),
             Text(
               'Select a Location (or Add a New One)',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.blue[800]),
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.blue[800],
+              ),
             ),
             SizedBox(height: 10),
             DropdownButton<String>(
@@ -191,12 +213,20 @@ class _ReviewsPageState extends State<ReviewsPage> {
                   child: Text('Add New Location'),
                 ),
               ],
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.black,
+              ),
             ),
             if (_showAdditionalFields) ...[
               SizedBox(height: 20),
               Text(
                 'Address',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.blue[800]),
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blue[800],
+                ),
               ),
               SizedBox(height: 10),
               TextField(
@@ -206,7 +236,11 @@ class _ReviewsPageState extends State<ReviewsPage> {
               SizedBox(height: 20),
               Text(
                 'Postal Code',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.blue[800]),
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blue[800],
+                ),
               ),
               SizedBox(height: 10),
               TextField(
@@ -216,7 +250,11 @@ class _ReviewsPageState extends State<ReviewsPage> {
               SizedBox(height: 20),
               Text(
                 'City',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.blue[800]),
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blue[800],
+                ),
               ),
               SizedBox(height: 10),
               TextField(
@@ -226,7 +264,11 @@ class _ReviewsPageState extends State<ReviewsPage> {
               SizedBox(height: 20),
               Text(
                 'State',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.blue[800]),
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blue[800],
+                ),
               ),
               SizedBox(height: 10),
               TextField(
@@ -236,7 +278,11 @@ class _ReviewsPageState extends State<ReviewsPage> {
               SizedBox(height: 20),
               Text(
                 'Country',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.blue[800]),
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blue[800],
+                ),
               ),
               SizedBox(height: 10),
               TextField(
@@ -247,8 +293,13 @@ class _ReviewsPageState extends State<ReviewsPage> {
             SizedBox(height: 20),
             Text(
               'Your Rating',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.blue[800]),
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.blue[800],
+              ),
             ),
+            SizedBox(height: 10),
             RatingBar.builder(
               initialRating: _rating,
               minRating: 0.5,
@@ -269,7 +320,11 @@ class _ReviewsPageState extends State<ReviewsPage> {
             SizedBox(height: 20),
             Text(
               'Your Feedback',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.blue[800]),
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.blue[800],
+              ),
             ),
             SizedBox(height: 10),
             TextField(

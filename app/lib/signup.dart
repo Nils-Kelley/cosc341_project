@@ -19,6 +19,7 @@ class _SignupScreenState extends State<SignupScreen> {
   TextEditingController _fullNameController = TextEditingController();
   TextEditingController _emailController = TextEditingController();
   TextEditingController _passwordController = TextEditingController();
+  TextEditingController _confirmPasswordController = TextEditingController();
 
   Future<void> _register() async {
     if (!_formKey.currentState!.validate()) {
@@ -48,11 +49,9 @@ class _SignupScreenState extends State<SignupScreen> {
 
       if (response.statusCode == 201) {
         final responseData = json.decode(responseBody);
-        final token = responseData['token']; // Assuming your API returns a token
+        final token = responseData['token'];
         if (token != null) {
-          // Store the token using AuthProvider
           Provider.of<AuthProvider>(context, listen: false).setToken(token);
-          // Navigate to HomeScreen upon successful registration
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => MyHomePage()),
@@ -72,6 +71,76 @@ class _SignupScreenState extends State<SignupScreen> {
     }
   }
 
+  String? _validateUsername(String? value) {
+    if (value == null || value.isEmpty) return 'Username is required';
+    return null;
+  }
+
+  String? _validateFullName(String? value) {
+    if (value == null || value.isEmpty) return 'Full name is required';
+    return null;
+  }
+
+  String? _validateEmail(String? value) {
+    if (value == null || value.isEmpty) return 'Email is required';
+    String pattern = r'\w+@\w+\.\w+';
+    if (!RegExp(pattern).hasMatch(value)) return 'Enter a valid email address';
+    return null;
+  }
+
+  String? _validatePassword(String? value) {
+    if (value == null || value.isEmpty) return 'Password is required';
+    String pattern = r'^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$';
+    if (!RegExp(pattern).hasMatch(value)) {
+      return 'Password must be at least 8 characters,\nincluding a number and a letter';
+    }
+    return null;
+  }
+
+  String? _validateConfirmPassword(String? value, String password) {
+    if (value == null || value.isEmpty) return 'Confirm password is required';
+    if (value != password) {
+      return 'Passwords do not match';
+    }
+    return null;
+  }
+
+  Widget _buildTextField({
+    required String labelText,
+    required String hintText,
+    required IconData icon,
+    bool obscureText = false,
+    required TextEditingController controller,
+    required String? Function(String?) validator,
+  }) {
+    return TextFormField(
+      controller: controller,
+      obscureText: obscureText,
+      decoration: InputDecoration(
+        labelText: labelText,
+        hintText: hintText,
+        prefixIcon: Icon(icon, color: Colors.blue),
+        focusedBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: Colors.blue, width: 2),
+          borderRadius: BorderRadius.circular(30),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: Colors.grey, width: 1),
+          borderRadius: BorderRadius.circular(30),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: Colors.red, width: 2),
+          borderRadius: BorderRadius.circular(30),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: Colors.red, width: 2),
+          borderRadius: BorderRadius.circular(30),
+        ),
+        errorStyle: TextStyle(color: Colors.red),
+      ),
+      validator: validator,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -102,6 +171,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   hintText: 'Enter your username',
                   icon: Icons.person_outline,
                   controller: _usernameController,
+                  validator: _validateUsername,
                 ),
                 SizedBox(height: 15),
                 _buildTextField(
@@ -109,6 +179,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   hintText: 'Enter your full name',
                   icon: Icons.person,
                   controller: _fullNameController,
+                  validator: _validateFullName,
                 ),
                 SizedBox(height: 15),
                 _buildTextField(
@@ -116,6 +187,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   hintText: 'Enter your email',
                   icon: Icons.email,
                   controller: _emailController,
+                  validator: _validateEmail,
                 ),
                 SizedBox(height: 15),
                 _buildTextField(
@@ -124,6 +196,16 @@ class _SignupScreenState extends State<SignupScreen> {
                   icon: Icons.lock,
                   obscureText: true,
                   controller: _passwordController,
+                  validator: _validatePassword,
+                ),
+                SizedBox(height: 15),
+                _buildTextField(
+                  labelText: 'Confirm Password',
+                  hintText: 'Confirm your password',
+                  icon: Icons.lock,
+                  obscureText: true,
+                  controller: _confirmPasswordController,
+                  validator: (value) => _validateConfirmPassword(value, _passwordController.text),
                 ),
                 SizedBox(height: 30),
                 ElevatedButton(
@@ -173,38 +255,6 @@ class _SignupScreenState extends State<SignupScreen> {
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildTextField({
-    required String labelText,
-    required String hintText,
-    required IconData icon,
-    bool obscureText = false,
-    required TextEditingController controller,
-  }) {
-    return TextFormField(
-      controller: controller,
-      obscureText: obscureText,
-      decoration: InputDecoration(
-        labelText: labelText,
-        hintText: hintText,
-        prefixIcon: Icon(icon, color: Colors.blue),
-        focusedBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: Colors.blue, width: 2),
-          borderRadius: BorderRadius.circular(30),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: Colors.grey, width: 1),
-          borderRadius: BorderRadius.circular(30),
-        ),
-      ),
-      validator: (value) {
-        if (value == null || value.isEmpty) {
-          return 'Please enter $labelText';
-        }
-        return null;
-      },
     );
   }
 }

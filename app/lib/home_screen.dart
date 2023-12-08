@@ -74,11 +74,10 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         appBar: AppBar(
           shadowColor: Colors.blue[900],
           title: TabBar(
-            controller: _tabController, // Assign TabController to the TabBar
+            controller: _tabController,
             onTap: (index) {
               setState(() {
                 _selectedTabIndex = index;
-                // Fetch reviews based on the selected tab
                 switch (index) {
                   case 0:
                     _fetchReviews('business');
@@ -90,8 +89,18 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               });
             },
             tabs: [
-              Tab(text: 'Business'),
-              Tab(text: 'Restaurant'),
+              Tab(
+                child: Text(
+                  'Businesses',
+                  style: TextStyle(fontSize: 18), // Adjust the font size as needed
+                ),
+              ),
+              Tab(
+                child: Text(
+                  'Restaurants',
+                  style: TextStyle(fontSize: 18), // Adjust the font size as needed
+                ),
+              ),
             ],
           ),
         ),
@@ -151,11 +160,11 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          for (var review in filteredReviews)
+          for (int i = 0; i < filteredReviews.length; i++)
             _buildReviewCard(
-              review['name'] ?? 'Unknown Business',
-              (review['rating'] ?? 0.0).toDouble(),
-              review['imageUrl'] ?? 'assets/2.png',
+              filteredReviews[i]['name'] ?? 'Unknown Business',
+              (filteredReviews[i]['rating'] ?? 0.0).toDouble(),
+              'assets/${i % 5}.png', // Calculate the image index and use it to select the image file
             ),
         ],
       ),
@@ -232,9 +241,21 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       isScrollControlled: true,
       builder: (BuildContext context) {
         return FractionallySizedBox(
-          heightFactor: 0.9, // Adjust the height factor as needed
+          heightFactor: 0.6, // Adjust the height factor as needed
           child: Container(
             padding: EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.withOpacity(0.5),
+                  spreadRadius: 2,
+                  blurRadius: 5,
+                  offset: Offset(0, 2),
+                ),
+              ],
+            ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -244,8 +265,10 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   children: [
                     Text(
                       'Details',
-                      style: appTextTheme.headline6!.copyWith(
-                        color: primaryColor, // Use your custom color
+                      style: TextStyle(
+                        fontSize: 24, // Adjust font size as needed
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).primaryColor,
                       ),
                     ),
                     IconButton(
@@ -269,8 +292,10 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 SizedBox(height: 16),
                 Text(
                   businessName,
-                  style: appTextTheme.headline6!.copyWith(
-                    color: primaryColor, // Use your custom color
+                  style: TextStyle(
+                    fontSize: 24, // Adjust font size as needed
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).primaryColor,
                   ),
                 ),
                 SizedBox(height: 4),
@@ -293,53 +318,39 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 ),
                 SizedBox(height: 16),
                 Text(
-                  'Description:',
-                  style: appTextTheme.bodyText1!.copyWith(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                    color: primaryColor, // Use your custom color
-                  ),
-                ),
-                Text(
-                  '24 Hours · Drive Thru · All Day Breakfast · Mobile Offers · Indoor Playplace · McCafé® · Wi-fi · Outdoor Seating',
-                  style: appTextTheme.bodyText2!.copyWith(
-                    fontSize: 14,
-                    color: Colors.black54,
-                  ),
-                ),
-                SizedBox(height: 16),
-                Text(
                   'Location:',
-                  style: appTextTheme.bodyText1!.copyWith(
+                  style: TextStyle(
+                    fontSize: 18, // Adjust font size as needed
                     fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                    color: primaryColor, // Use your custom color
+                    color: Theme.of(context).primaryColor,
                   ),
                 ),
                 Text(
                   '1555 Banks Rd, Kelowna, BC V1X 7Y8',
-                  style: appTextTheme.bodyText2!.copyWith(
-                    fontSize: 14,
+                  style: TextStyle(
+                    fontSize: 16, // Adjust font size as needed
                     color: Colors.black54,
                   ),
                 ),
                 SizedBox(height: 16),
-
-                // Centered and styled 'View Reviews' button
                 Center(
                   child: ElevatedButton(
                     onPressed: () {
                       Navigator.of(context).push(MaterialPageRoute(
-                        builder: (context) => ItemReviewScreen(companyName: businessName), // Navigate to ItemReviewScreen
+                        builder: (context) => ItemReviewScreen(companyName: businessName),
                       ));
                     },
-                    child: Text('View Reviews', style: TextStyle(fontSize: 18)), // Larger font size
+                    child: Text(
+                      'View Reviews',
+                      style: TextStyle(fontSize: 18, color: Colors.white),
+                    ),
                     style: ElevatedButton.styleFrom(
-                      primary: Colors.white, // Use your primary color here
-                      padding: EdgeInsets.symmetric(horizontal: 32, vertical: 12), // Larger padding
+                      primary: Theme.of(context).primaryColor,
+                      padding: EdgeInsets.symmetric(horizontal: 32, vertical: 12),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8), // Rounded corners
+                        borderRadius: BorderRadius.circular(8),
                       ),
+                      elevation: 4, // Add elevation for a shadow effect
                     ),
                   ),
                 ),
@@ -350,4 +361,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       },
     );
   }
+
+
 }
