@@ -14,7 +14,7 @@
 ### 2. Open Docker & an IDE (use Android Studio if you are NOT using a physical Android device to run the app).
 ### 3. **IMPORTANT** Replace all instances of '10.0.0.201' with your own LOCAL computer IPV4. 
                     Note: You can find your IPV4 by running the 'ipconfig' command in cmdlet. 
-                    - Hold 'Command + Shift + F' and search '10.0.0.201' in the app directory (where the flutter files are). 
+                    - Hold 'ctrl + shift + F' and search '10.0.0.201' in the app directory (where the flutter files are). 
                     Reason: To avoid a SocketException. 
                                  
 
