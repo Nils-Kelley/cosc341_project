@@ -17,7 +17,7 @@ Port 3306: SQL
                                  
 
 4. Run node.js and docker-compose mysql-db in seperate terminals in the backend directory within your preferred IDE.
-5. 
+5. Depens on how you're running the app.
 - 5.1 (If you are running a phyical device and have the flutter console installed):
        - Go to the app dir and insert the command 'flutter run'. This will start the app on you physical device and you are good to go!
 - 5.2 (If you are running Android Studio):
